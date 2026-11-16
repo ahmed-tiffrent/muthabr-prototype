@@ -19,7 +19,7 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--stage:#14111F;--stage-ink:#EDEAF7;--stage-ink2:#A39CBD;--stage-card:#1E1A2E;--stage-line:#2E2945;color-scheme:dark}}
 :root[data-theme="dark"]{--stage:#14111F;--stage-ink:#EDEAF7;--stage-ink2:#A39CBD;--stage-card:#1E1A2E;--stage-line:#2E2945;color-scheme:dark}
 
-html,body{height:100%}
+html,body{height:100%;margin:0}
 body{background:var(--stage);color:var(--stage-ink);font-family:var(--font);overflow:hidden;
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
 *{box-sizing:border-box}
@@ -309,6 +309,55 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .otp input{position:absolute;inset:0;opacity:0;font-size:16px;width:100%;caret-color:transparent}
 .ctoast{position:absolute;left:24px;right:24px;bottom:34px;z-index:20;min-height:44px;border-radius:8px;background:var(--red-200);color:var(--red-900);display:flex;align-items:center;gap:8px;padding:0 8px 0 16px;font-size:14px;line-height:20px;animation:upIn .3s cubic-bezier(.22,.8,.24,1) both}
 .ctoast span{flex:1}
+
+/* ---------- profile setup (after sign-up) ---------- */
+.su-top{background:var(--primary);flex:none}
+.su-users{flex:1;min-height:0;display:flex;flex-direction:column}
+.su-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px 40px}
+.su-avs{display:flex;align-items:center;justify-content:center;margin-bottom:28px}
+.su-avs img{border-radius:50%;object-fit:cover;border:3px solid #fff;margin:0 -9px;animation:avIn .5s cubic-bezier(.22,.8,.24,1.3) both}
+@keyframes avIn{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.su-list{flex:1;overflow-y:auto;padding:12px 16px}
+.su-u{display:flex;align-items:center;gap:16px;padding:12px 0;animation:upIn .35s cubic-bezier(.22,.8,.24,1) both}
+.su-u .av{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+.su-u .av img{width:44px;height:44px}
+.su-u .rm{width:40px;height:40px;border-radius:10px;background:var(--surf-low);border:1px solid var(--outline);box-shadow:0 3px 0 var(--surf-high);display:flex;align-items:center;justify-content:center;flex:none}
+.su-u .rm:active{transform:translateY(2px);box-shadow:0 1px 0 var(--surf-high)}
+.su-actions{padding:12px 16px 0;display:flex;flex-direction:column;gap:16px;flex:none}
+.su-sheet{max-height:720px;display:flex;flex-direction:column}
+.su-sheet .grab{width:36px;height:5px;border-radius:3px;background:var(--surf-high);margin:8px auto 0}
+.su-form{padding:20px 16px 0;display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+.su-pair{display:flex;gap:16px}
+.su-pair .opt{flex:1;justify-content:center;height:40px;font-size:12px}
+.su-sel{position:relative}
+.su-sel .inp{cursor:pointer;justify-content:space-between;padding-right:12px}
+.su-sel .inp span{color:var(--on2)}
+.su-sel.has .inp span{color:var(--on1)}
+.su-sel .inp svg{transition:transform .2s}
+.su-sel.open .inp{border-color:var(--primary)}
+.su-sel.open .inp svg{transform:rotate(180deg)}
+.su-opts{display:none;margin-top:6px;border:1px solid var(--outline);border-radius:8px;max-height:176px;overflow-y:auto;background:#fff}
+.su-sel.open .su-opts{display:block;animation:ddIn .2s cubic-bezier(.22,.8,.24,1) both}
+.su-opts button{display:flex;align-items:center;justify-content:space-between;width:100%;height:44px;padding:0 16px;font-size:14px;text-align:left}
+.su-opts button+button{border-top:1px solid var(--outline)}
+.su-opts button.on{color:var(--primary);font-weight:500}
+.su-ferr{font-size:12px;line-height:16px;color:var(--red-500)}
+.su-sheet .foot{padding:20px 16px 0;flex:none}
+.pc-dots{display:flex;gap:20px;justify-content:center;margin-top:64px}
+.pc-dots i{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--outline);transition:background .15s,border-color .15s,transform .15s}
+.pc-dots i.on{background:var(--primary);border-color:var(--primary);transform:scale(1.04)}
+.pc-dots.shake{animation:shake .4s}
+.pc-dots.bad i.on{background:var(--red-500);border-color:var(--red-500)}
+.pc-dots.good i.on{background:var(--green-500);border-color:var(--green-500)}
+.kpad{background:#D1D3D9;padding:6px 6px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px 6px;flex:none}
+.kpad button{height:46px;border-radius:5px;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,"SF Pro Text",var(--font);color:#000}
+.kpad button b{font-size:25px;line-height:26px;font-weight:400}
+.kpad button small{font-size:10px;line-height:11px;font-weight:600;letter-spacing:.12em}
+.kpad button:active{background:#B4B8C1}
+.kpad button.blank{background:transparent;box-shadow:none;pointer-events:none}
+.kpad button.del{background:transparent;box-shadow:none}
+.kpad button.del:active{background:#B4B8C1}
+.kpad .home-ind{grid-column:1/-1;height:34px}
 .sms{position:absolute;left:8px;right:8px;top:54px;z-index:70;background:rgba(245,245,247,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:20px;padding:12px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.18);animation:smsIn .5s cubic-bezier(.22,.8,.24,1.1) both;text-align:left;font-family:-apple-system,"SF Pro Text",var(--font)}
 .sms.bye{animation:smsOut .3s ease-in both}
 @keyframes smsIn{from{transform:translateY(-170%)}to{transform:none}}
@@ -515,7 +564,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
     <p>Built from the Muthabr Figma file with the app's own tokens, Rubik type and assets. Every tap, swipe and answer works.</p>
     <nav class="flows" aria-label="Jump to a flow">
       <button data-jump="splash"><span>Splash and onboarding</span><span>4 slides</span></button>
-      <button data-jump="signup"><span>Create account</span><span>phone · OTP</span></button>
+      <button data-jump="signup"><span>Create account</span><span>OTP · setup</span></button>
       <button data-jump="signin"><span>Sign in</span><span>validation</span></button>
       <button data-jump="home"><span>Syllabus home</span><span>grid · rows</span></button>
       <button data-jump="topics"><span>Study path</span><span>unit → topic</span></button>
@@ -953,7 +1002,7 @@ R.code = (el, p) => {
       el.querySelector('.ctoast')?.remove(); const t=document.createElement('div'); t.className='ctoast'; t.innerHTML=`<span>Not a valid code, try again or resend it</span><button class="icbtn" style="width:32px;height:32px" aria-label="Dismiss">${ic('r-x','s20')}</button>`;
       t.querySelector('button').addEventListener('click',()=>t.remove()); el.appendChild(t); return;
     }
-    otp.classList.add('good'); clearInterval(tick); setTimeout(()=>go('hooray',{email:p.email||S.signupEmail},'fade'), 550);
+    otp.classList.add('good'); clearInterval(tick); setTimeout(()=>go('users',{},'push'), 550);
   };
   inp.addEventListener('input',()=>{ inp.value=inp.value.replace(/\D/g,'').slice(0,6); if(otp.classList.contains('bad')) clearErr(); paint(); if(inp.value.length===6) setTimeout(verify,250); });
   inp.addEventListener('focus',paint); inp.addEventListener('blur',paint);
@@ -977,6 +1026,113 @@ R.hooray = (el, p) => {
   setTimeout(()=>{ if(el.isConnected) confetti(80); }, 250);
   bind(el,'[data-in]',()=>go('signin',{email:p.email||S.signupEmail||''},'fade'));
 };
+
+
+/* ---------------- profile setup: add users → passcode ---------------- */
+const SU_AV = [['su-bear.png','#E9E1FF'],['su-lion.png','#E2F2CC'],['su-tiger.png','#FFF1C2']];
+const SU_REG = {
+  'Muscat':['Muscat','Muttrah','Bawshar','As Seeb','Al Amarat','Qurayyat'],
+  'Dhofar':['Salalah','Taqah','Mirbat','Thumrait'],
+  'Al Batinah North':['Sohar','Shinas','Saham','Al Khaburah'],
+  'Al Batinah South':['Rustaq','Barka','Nakhal','Al Musanaah'],
+  'Ad Dakhiliyah':['Nizwa','Bahla','Samail','Izki'],
+  'Ash Sharqiyah North':['Ibra','Al Mudaybi','Bidiyah'],
+  'Ash Sharqiyah South':['Sur','Jaalan Bani Bu Ali','Masirah'],
+  'Al Dhahirah':['Ibri','Yanqul','Dhank'],
+  'Al Buraimi':['Al Buraimi','Mahdah'],
+  'Al Wusta':['Haima','Duqm'],
+  'Musandam':['Khasab','Bukha','Dibba']
+};
+const SU_SCHOOLS = ['Al Noor School for Basic Education','Al Ishraq School','Bright Horizons Private School','Al Manar School','Ibn Sina Post-Basic School'];
+const SU_GRADES = ['5','6','7','8','9','10','11','12'].map(g=>'Grade '+g);
+S.users = S.users || [];
+const plusIc = `<svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M228 128a12 12 0 0 1-12 12h-76v76a12 12 0 0 1-24 0v-76H40a12 12 0 0 1 0-24h76V40a12 12 0 0 1 24 0v76h76a12 12 0 0 1 12 12Z"/></svg>`;
+const suNav = (title) => `${statusBar()}<div class="asheet" style="border-radius:24px 24px 0 0">${navBar({title})}<div style="height:1px;background:var(--outline);flex:none"></div>`;
+
+R.users = (el) => {
+  const U = S.users;
+  el.innerHTML = suNav('Add Users') + `
+    <div class="su-users">
+      ${U.length ? `<div class="su-list">${U.map((u,k)=>`<div class="su-u" style="animation-delay:${k*60}ms">
+          <span class="av" style="background:${u.bg}"><img src="${A+u.av}" alt=""></span>
+          <span style="flex:1;min-width:0"><span class="t16" style="display:block">${esc(u.name)}${u.type==='Teacher'?' (Teacher)':''}</span><span class="b14 mut" style="font-size:12px;line-height:16px">${esc(u.grade)} · ${esc(u.willaya)}</span></span>
+          <button class="rm" data-rm="${k}" aria-label="Remove ${esc(u.name)}">${ic('r-x','s20')}</button></div>`).join('')}</div>`
+      : `<div class="su-empty">
+          <div class="su-avs">${[['su-av1.png',64],['su-av2.png',80],['su-av3.png',104],['su-av4.png',80],['su-av5.png',64]].map(([f,w],k)=>`<img src="${A+f}" width="${w}" height="${w}" alt="" style="z-index:${k===2?3:k===1||k===3?2:1};animation-delay:${[160,80,0,80,160][k]}ms">`).join('')}</div>
+          <div style="font-size:20px;line-height:28px;font-weight:600">Add users to your account</div>
+          <div class="b14 mut" style="margin-top:6px">Each user will have own workspace</div></div>`}
+      <div class="su-actions">
+        <button class="btn secondary" data-add>${plusIc}Add User</button>
+        <button class="btn primary ${U.length?'':'disabled'}" data-next>Next Step</button>
+      </div>
+    </div></div>${homeInd()}`;
+  el.querySelector('.home-ind').style.background='#fff';
+  wireBack(el);
+  bind(el,'[data-add]',()=>addUserSheet());
+  bind(el,'[data-rm]',(b)=>{ S.users.splice(+b.dataset.rm,1); rerender(); });
+  bind(el,'[data-next]',()=>go('passcode'));
+};
+
+function addUserSheet(){
+  const f = {name:'', gender:'Female', grade:'', region:'', willaya:'', school:''};
+  const bs = overlay(`<div class="su-sheet"><div class="grab"></div>
+    <div class="bs-head" style="min-height:56px"><div class="t16">Add User</div><button class="icbtn x" style="top:8px" data-x aria-label="Close">${ic('r-x')}</button></div>
+    <div class="su-form">
+      <div class="field"><label for="su-un">Username</label><div class="inp" data-un><input id="su-un" placeholder="Enter username" autocomplete="off"></div></div>
+      <div class="field"><label>Gender</label><div class="su-pair">${['Female','Male'].map(g=>`<button class="opt ${g===f.gender?'sel':''}" data-g="${g}">${g}</button>`).join('')}</div></div>
+      ${[['grade','Grade','Select grade'],['region','Region','Select region'],['willaya','Willaya','Select willaya'],['school','School','Select school']].map(([k,l,ph])=>`
+      <div class="field su-sel" data-sel="${k}"><label>${l}</label><div class="inp" role="button" tabindex="0" data-open><span>${ph}</span>${ic('r-caret-down','s20')}</div><div class="su-opts"></div></div>`).join('')}
+      <div data-err class="su-ferr" hidden></div>
+    </div>
+    <div class="foot"><button class="btn primary" data-save>Add User</button></div>${homeInd()}</div>`);
+  const opts = (k) => k==='grade'?SU_GRADES : k==='region'?Object.keys(SU_REG) : k==='willaya'?(SU_REG[f.region]||[]) : SU_SCHOOLS;
+  const ph = {grade:'Select grade',region:'Select region',willaya:'Select willaya',school:'Select school'};
+  const paint = () => bs.querySelectorAll('[data-sel]').forEach(w=>{ const k=w.dataset.sel; w.classList.toggle('has',!!f[k]); w.querySelector('[data-open] span').textContent = f[k] || (k==='willaya'&&!f.region?'Select a region first':ph[k]);
+    w.querySelector('.su-opts').innerHTML = opts(k).map(o=>`<button data-o="${esc(o)}" class="${o===f[k]?'on':''}">${esc(o)}${o===f[k]?ic('r-check','s16'):''}</button>`).join('');
+    w.querySelectorAll('[data-o]').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); f[k]=b.dataset.o; if(k==='region') f.willaya=''; w.classList.remove('open'); w.querySelector('.inp').classList.remove('err'); paint(); })); });
+  paint();
+  bs.querySelectorAll('[data-open]').forEach(o=>o.addEventListener('click',e=>{ e.stopPropagation(); const w=o.closest('[data-sel]'); if(w.dataset.sel==='willaya'&&!f.region) return; const was=w.classList.contains('open'); bs.querySelectorAll('[data-sel]').forEach(x=>x.classList.remove('open')); if(!was){ w.classList.add('open'); setTimeout(()=>w.scrollIntoView({block:'nearest',behavior:'smooth'}),60);} }));
+  bind(bs,'[data-g]',(b)=>{ f.gender=b.dataset.g; bs.querySelectorAll('[data-g]').forEach(x=>x.classList.toggle('sel',x===b)); });
+  bind(bs,'[data-x]',()=>closeOverlay());
+  const un=bs.querySelector('#su-un'), err=bs.querySelector('[data-err]');
+  un.addEventListener('input',()=>bs.querySelector('[data-un]').classList.remove('err'));
+  bind(bs,'[data-save]',()=>{
+    f.name=un.value.trim();
+    const miss=[]; if(!f.name){ bs.querySelector('[data-un]').classList.add('err'); miss.push('username'); }
+    ['grade','region','willaya','school'].forEach(k=>{ if(!f[k]){ bs.querySelector(`[data-sel="${k}"] .inp`).classList.add('err'); miss.push(k); } });
+    if(miss.length){ err.hidden=false; err.textContent='Please add the '+miss.join(', ')+'.'; return; }
+    const [av,bg]=SU_AV[S.users.length%SU_AV.length];
+    S.users.push({name:f.name, gender:f.gender, type:'Student', grade:f.grade, willaya:f.willaya, school:f.school, av, bg});
+    closeOverlay(); setTimeout(()=>{ rerender(); toast(`${f.name} added`); }, 200);
+  });
+  setTimeout(()=>{ if(un.isConnected) un.focus({preventScroll:true}); }, 400);
+}
+
+const kpad = () => `<div class="kpad">${[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']].map(([n,l])=>`<button data-k="${n}"><b>${n}</b>${l?`<small>${l}</small>`:''}</button>`).join('')}<button class="blank" tabindex="-1"></button><button data-k="0"><b>0</b></button><button class="del" data-del aria-label="Delete"><svg width="26" height="20" viewBox="0 0 26 20" fill="none" stroke="#000" stroke-width="1.6" stroke-linejoin="round"><path d="M8 1h15a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8L1 10Z"/><path d="m12 6 8 8m0-8-8 8" stroke-linecap="round"/></svg></button>${homeInd()}</div>`;
+
+const passScreen = (confirm) => (el) => {
+  let v='';
+  el.innerHTML = suNav(confirm?'Confirm Passcode':'Create Passcode') + `
+    <div style="flex:1;display:flex;flex-direction:column;padding:0 24px">
+      <div class="pc-dots" data-dots>${'<i></i>'.repeat(4)}</div>
+      <div class="b14 mut" style="text-align:center;margin-top:20px;height:20px" data-msg>${confirm?'Repeat your passcode':'Enter 4 digits'}</div>
+      <button class="btn primary disabled" style="margin-top:auto;margin-bottom:24px" data-ok>${confirm?'Confirm Passcode':'Create Passcode'}</button>
+    </div></div>${kpad()}`;
+  const dots=el.querySelector('[data-dots]'), ok=el.querySelector('[data-ok]'), msg=el.querySelector('[data-msg]');
+  const paint=()=>{ [...dots.children].forEach((d,k)=>d.classList.toggle('on',k<v.length)); ok.classList.toggle('disabled',v.length<4); };
+  const submit=()=>{
+    if(v.length<4) return;
+    if(!confirm){ S.passcode=v; go('passcode2'); return; }
+    if(v!==S.passcode){ dots.classList.add('bad'); dots.classList.remove('shake'); dots.offsetWidth; dots.classList.add('shake'); msg.innerHTML='<span style="color:var(--red-500)">Passcodes don’t match, try again</span>'; setTimeout(()=>{ v=''; dots.classList.remove('bad'); paint(); },650); return; }
+    dots.classList.add('good'); setTimeout(()=>go('hooray',{email:S.signupEmail},'fade'),450);
+  };
+  el.querySelectorAll('[data-k]').forEach(b=>b.addEventListener('click',()=>{ if(v.length>=4) return; v+=b.dataset.k; if(confirm) msg.textContent='Repeat your passcode'; paint(); if(v.length===4) setTimeout(submit,260); }));
+  bind(el,'[data-del]',()=>{ v=v.slice(0,-1); paint(); });
+  bind(el,'[data-ok]',submit);
+  wireBack(el); paint();
+};
+R.passcode = passScreen(false);
+R.passcode2 = passScreen(true);
 
 /* tab bar */
 const coverImg = (b, small) => b.cover ? `<img src="${A+b.cover}" alt="${esc(b.title)} cover">` : `<div class="mathcover ${small?'sm':''}" role="img" aria-label="Basic Math cover"><span class="mc-g">Grade 10</span><span class="mc-t">Basic<br>Math</span><span class="mc-f">a² + b² = c²</span><svg class="mc-s" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="14"/><path d="M20 100 L60 20 L100 100 Z" fill="none" stroke="#FBC02D" stroke-width="4"/></svg></div>`;
@@ -1442,6 +1598,7 @@ function jump(where){
     case 'splash': reset([['splash']]); break;
     case 'onboarding': reset([['onboarding']]); break;
     case 'signup': reset([['signup']]); break;
+    case 'setup': S.phone=S.phone||'9123-4567'; reset([['users']]); break;
     case 'code': S.phone=S.phone||'9123-4567'; reset([['signup'],['phone'],['code',{phone:S.phone}]]); break;
     case 'signin': reset([['signin']]); break;
     case 'home': S.tab='syllabus'; reset([['home']]); break;
@@ -1457,7 +1614,7 @@ document.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',(
 window.__muthabr = {jump, go, back, S};
 // allow #hash deep links for sharing a flow
 const start = (location.hash||'').slice(1);
-jump(['onboarding','signup','code','profile','signin','home','topics','flash','quiz','friends','bookmarks'].includes(start)?start:'splash');
+jump(['onboarding','signup','code','setup','profile','signin','home','topics','flash','quiz','friends','bookmarks'].includes(start)?start:'splash');
 
 /* ---------------- scale device to fit ---------------- */
 const dev=document.getElementById('device');
