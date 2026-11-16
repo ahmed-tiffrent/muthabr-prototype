@@ -1,0 +1,1467 @@
+<meta charset="utf-8">
+<title>Muthabr Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a single 375×812 Muthabr phone, centred on a quiet stage with a flow index beside it on desktop; full-bleed on phones. */
+:root{
+  --primary:#532EC9; --primary-800:#2D0D94; --purple-400:#8060E5; --purple-100:#EFEAFF; --purple-50:#F6F3FF;
+  --on1:#333333; --on2:#666666; --on4:#959595; --dis:#A2A2A2;
+  --outline:#EBEBEB; --surf:#FFFFFF; --surf-low:#F9F9F9; --surf-high:#E4E4E4;
+  --green-500:#82B536; --green-600:#6A9A23; --green-100:#EFFFD6; --green-200:#D3F1A7; --green-900:#37471F;
+  --red-500:#F15B50; --red-600:#E2483D; --red-100:#FFECEB; --red-200:#FFD5D2; --red-900:#5D1F1A;
+  --yellow:#FBC02D; --warn:#F5CD47; --yellow-100:#FFF7D9; --orange:#F57C1F;
+  --font:"Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* stage (outside the phone) */
+  --stage:#EEEBF6; --stage-ink:#2A2440; --stage-ink2:#6A6385; --stage-card:#FFFFFF; --stage-line:#DDD7EC;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--stage:#14111F;--stage-ink:#EDEAF7;--stage-ink2:#A39CBD;--stage-card:#1E1A2E;--stage-line:#2E2945;color-scheme:dark}}
+:root[data-theme="dark"]{--stage:#14111F;--stage-ink:#EDEAF7;--stage-ink2:#A39CBD;--stage-card:#1E1A2E;--stage-line:#2E2945;color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--stage);color:var(--stage-ink);font-family:var(--font);overflow:hidden;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--purple-400);outline-offset:2px}
+
+/* ---------- stage ---------- */
+.stage{height:100%;display:flex;align-items:center;justify-content:center;gap:56px}
+.side{width:260px;display:flex;flex-direction:column;gap:20px}
+.side h1{font-size:28px;font-weight:600;line-height:34px;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.side p{margin:0;color:var(--stage-ink2);font-size:14px;line-height:21px}
+.eyebrow{font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--purple-400)}
+.flows{display:flex;flex-direction:column;border:1px solid var(--stage-line);border-radius:14px;background:var(--stage-card);overflow:hidden}
+.flows button{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;font-size:14px;text-align:left;border-top:1px solid var(--stage-line)}
+.flows button:first-child{border-top:0}
+.flows button:hover{background:color-mix(in srgb,var(--purple-400) 10%,transparent)}
+.flows button span:last-child{color:var(--stage-ink2);font-size:12px}
+.hint{font-size:12px;color:var(--stage-ink2);line-height:18px}
+.device{position:relative;width:375px;height:812px;flex:none;transform-origin:center center}
+.bezel{position:absolute;inset:-12px;border-radius:58px;background:#0E0B16;box-shadow:0 40px 80px -20px rgba(40,20,90,.45),0 0 0 1.5px #3a3550 inset}
+.screen-wrap{position:absolute;inset:0;border-radius:46px;overflow:hidden;background:#fff;isolation:isolate}
+@media (max-width:760px){.side{display:none}}
+@media (max-width:480px){
+  body{padding:0}
+  .stage{display:block}
+  .device{width:100%;height:100%;transform:none!important}
+  .bezel{display:none}
+  .screen-wrap{border-radius:0}
+}
+
+/* ---------- app shell ---------- */
+.app{position:absolute;inset:0;font-family:var(--font);color:var(--on1);font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased;user-select:none;-webkit-tap-highlight-color:transparent}
+.scr{position:absolute;inset:0;overflow:hidden;background:var(--primary);display:flex;flex-direction:column;will-change:transform}
+.scr.white{background:#fff}
+.anim-in-right{animation:inR .42s cubic-bezier(.22,.8,.24,1) both}
+.anim-out-left{animation:outL .42s cubic-bezier(.22,.8,.24,1) both}
+.anim-in-left{animation:inL .42s cubic-bezier(.22,.8,.24,1) both}
+.anim-out-right{animation:outR .42s cubic-bezier(.22,.8,.24,1) both;z-index:5}
+.anim-fade-in{animation:fadeIn .32s ease both}
+.anim-up{animation:upIn .46s cubic-bezier(.22,.8,.24,1) both}
+@keyframes inR{from{transform:translateX(100%)}to{transform:none}}
+@keyframes outL{to{transform:translateX(-28%);filter:brightness(.92)}}
+@keyframes inL{from{transform:translateX(-28%);filter:brightness(.92)}to{transform:none}}
+@keyframes outR{to{transform:translateX(100%)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes upIn{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.ic{width:24px;height:24px;flex:none;display:inline-block;vertical-align:middle}
+.ic.s20{width:20px;height:20px}.ic.s16{width:16px;height:16px}.ic.s32{width:32px;height:32px}
+
+/* status bar */
+.status{height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 50px;font-weight:600;font-size:17px;color:#fff;position:relative;z-index:3;font-family:-apple-system,"SF Pro Text",var(--font)}
+.status.dark{color:#000}
+.status .lv{display:flex;gap:6px;align-items:center}
+.home-ind{height:34px;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px}
+.home-ind i{width:139px;height:5px;border-radius:100px;background:var(--on1)}
+.home-ind.light i{background:#fff}
+
+/* nav bars */
+.nav{height:64px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:relative}
+.nav .t{position:absolute;left:64px;right:64px;text-align:center;font-weight:500;font-size:16px;line-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav .t small{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:400;line-height:16px;color:var(--on1)}
+.nav .t small i{width:8px;height:8px;border-radius:50%}
+.nav.on-purple{color:#fff}
+.icbtn{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;transition:background .15s}
+.icbtn:active{background:rgba(0,0,0,.06)}
+.icbtn.bordered{border:1px solid var(--outline)}
+.sheet{flex:1;min-height:0;background:#fff;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.sheet>.nav{border-bottom:1px solid var(--outline)}
+.scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+
+/* type */
+.h28{font-size:28px;line-height:36px;font-weight:600}
+.t20{font-size:20px;line-height:26px;font-weight:500}
+.t16{font-size:16px;line-height:22px;font-weight:500}
+.l14{font-size:14px;line-height:20px;font-weight:500}
+.b14{font-size:14px;line-height:20px}
+.b12{font-size:12px;line-height:16px}
+.l12{font-size:12px;line-height:16px;font-weight:500}
+.mut{color:var(--on2)}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;padding:24px 16px 16px}
+.count{font-size:12px;font-weight:500;color:var(--on2)}.count b{color:var(--primary);font-weight:500}
+
+/* buttons */
+.btn{height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:500;font-size:14px;width:100%;transition:transform .12s,box-shadow .12s,background .2s,color .2s;position:relative}
+.btn.primary{background:var(--primary);color:#fff;box-shadow:0 4px 0 var(--primary-800)}
+.btn.secondary{background:var(--surf-low);color:var(--on1);border:1px solid var(--outline);box-shadow:0 4px 0 var(--surf-high)}
+.btn.white{background:#fff;color:var(--on1);box-shadow:0 4px 0 var(--surf-high)}
+.btn.yellow{background:var(--yellow);color:var(--primary-800);box-shadow:none}
+.btn.disabled{background:var(--surf-low);color:var(--dis);box-shadow:0 4px 0 var(--surf-high);pointer-events:none}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--primary-800)}
+.btn.secondary:active,.btn.white:active{box-shadow:0 1px 0 var(--surf-high)}
+.btn.sq{width:48px;flex:none}
+.link{color:var(--primary);font-weight:500}
+
+/* inputs */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:500;line-height:16px}
+.inp{height:40px;border:1px solid var(--outline);border-radius:8px;display:flex;align-items:center;padding:0 12px 0 16px;gap:8px;background:#fff;transition:border-color .15s}
+.inp:focus-within{border-color:var(--primary)}
+.inp.err{border-color:var(--red-500);background:var(--red-100)}
+.inp input{flex:1;border:0;outline:0;font:inherit;font-size:14px;color:var(--on1);background:transparent;min-width:0}
+.inp input::placeholder{color:var(--on2)}
+.errmsg{font-size:12px;color:var(--red-600)}
+.search{height:40px;border:1px solid var(--outline);border-radius:10px;display:flex;align-items:center;gap:12px;padding:0 16px;background:#fff}
+.search input{flex:1;border:0;outline:0;font:inherit;font-size:14px;background:transparent;min-width:0;color:var(--on1)}
+.search input::placeholder{color:var(--on2)}
+
+/* lists */
+.group{border:1px solid var(--outline);border-radius:12px;overflow:hidden;background:#fff}
+.row{display:flex;align-items:center;gap:12px;min-height:48px;padding:12px 16px;border-top:1px solid var(--outline);width:100%;text-align:left;transition:background .15s}
+.row:first-child{border-top:0}
+.row:active{background:var(--surf-low)}
+.row .grow{flex:1;min-width:0}
+.check{width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center}
+.check.done{background:var(--green-500);color:#fff}
+.check.todo{border:1.5px solid var(--outline)}
+.ring{width:20px;height:20px;flex:none}
+.progress{height:6px;border-radius:6px;background:var(--green-200);overflow:hidden}
+.progress i{display:block;height:100%;border-radius:6px;background:var(--green-500);transition:width .8s cubic-bezier(.22,.8,.24,1)}
+
+/* badges / chips */
+.badge{min-width:16px;height:16px;padding:0 4px;border-radius:100px;font-size:10px;line-height:16px;font-weight:500;text-align:center;display:inline-block}
+.seg{display:inline-flex;padding:4px;border-radius:10px;background:var(--surf-low);border:1px solid var(--outline);position:relative}
+.seg button{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;font-weight:500;color:var(--on2);position:relative;z-index:1;transition:color .2s}
+.seg button.on{color:#fff}
+.seg button .badge{background:var(--on2);color:#fff;transition:all .2s}
+.seg button.on .badge{background:#fff;color:var(--primary)}
+.seg .pill{position:absolute;top:4px;bottom:4px;border-radius:6px;background:var(--primary);transition:left .3s cubic-bezier(.22,.8,.24,1),width .3s cubic-bezier(.22,.8,.24,1)}
+
+/* overlays */
+.overlay{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end}
+.overlay .dim{position:absolute;inset:0;background:rgba(51,51,51,.4);animation:fadeIn .25s ease both}
+.overlay.closing .dim{animation:fadeOut .22s ease both}
+.overlay .bs{position:relative;background:#fff;border-radius:18px 18px 0 0;animation:sheetUp .38s cubic-bezier(.22,.8,.24,1) both}
+.overlay.closing .bs{animation:sheetDown .26s ease-in both}
+.overlay.center{justify-content:center;padding:0 16px}
+.overlay.center .bs{border-radius:18px;animation:popIn .3s cubic-bezier(.22,.8,.24,1.2) both}
+.overlay.closing.center .bs{animation:fadeOut .18s ease both}
+@keyframes fadeOut{to{opacity:0}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes sheetDown{to{transform:translateY(100%)}}
+@keyframes popIn{from{transform:scale(.92);opacity:0}to{transform:none;opacity:1}}
+.bs-head{display:flex;align-items:center;justify-content:center;position:relative;min-height:64px;border-bottom:1px solid var(--outline);padding:0 56px;text-align:center}
+.bs-head .x{position:absolute;right:16px;top:12px}
+.toast{position:absolute;left:16px;right:16px;bottom:110px;z-index:60;background:var(--on1);color:#fff;border-radius:12px;padding:12px 16px;display:flex;gap:10px;align-items:center;font-size:14px;animation:upIn .3s ease both}
+
+/* ---------- screens ---------- */
+/* splash */
+.splash{}
+.rings{position:absolute;left:50%;top:50%;width:0;height:0}
+.rings i{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06) 0,rgba(255,255,255,.02) 60%,transparent 70%);transform:translate(-50%,-50%);animation:breathe 3s ease-in-out infinite}
+@keyframes breathe{50%{transform:translate(-50%,-50%) scale(1.06)}}
+.splash .logo{width:74px;height:60px;position:relative;animation:logoIn .9s cubic-bezier(.22,.8,.24,1.2) both .15s}
+@keyframes logoIn{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+
+/* onboarding — Figma "Onboarding - 8, 9, 10, 11" */
+.onb .track{flex:1;min-height:0;display:flex;transition:transform .55s cubic-bezier(.22,.8,.24,1);touch-action:pan-y}
+.ob{width:375px;flex:none;display:flex;flex-direction:column;height:100%;position:relative}
+.ob-sheet{flex:1;min-height:0;background:#fff;border-radius:24px 24px 0 0;display:flex;flex-direction:column}
+.ob .home-ind.w{background:#fff}
+.ob-head{height:69px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--outline)}
+.ob-head .skip{font-size:16px;line-height:22px;font-weight:500;color:var(--on2);padding:6px 0 6px 12px}
+.ob-head .bk{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px}
+.ob-head .bk:active{background:var(--surf-low)}
+.ob-body{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;padding:40px 24px 24px}
+.ob-act{display:flex;flex-direction:column;gap:12px;align-items:center;padding:0 24px;flex:none}
+.ob-dots{display:flex;gap:6px;height:6px}
+.ob-dots i{width:6px;height:6px;border-radius:3px;background:#D8D8D8}
+.ob-dots i.on{width:24px;background:var(--primary)}
+.ob.active .ob-dots i.on{animation:dotGrow .45s cubic-bezier(.22,.8,.24,1) both}
+@keyframes dotGrow{from{width:6px}to{width:24px}}
+.obtn{height:48px;width:100%;flex:none;border-radius:12px;background:var(--primary);color:#fff;font-weight:500;font-size:14px;line-height:20px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.25);padding-bottom:4px;transition:transform .12s,box-shadow .12s,padding .12s}
+.obtn:active{transform:translateY(2px);box-shadow:inset 0 -1px 0 rgba(0,0,0,.25);padding-bottom:1px}
+.obtn.light{background:#fff;color:var(--on1)}
+.ob h2{margin:0;font-size:28px;line-height:36px;font-weight:600;color:var(--on1);width:100%}
+.ob .desc{margin:16px 0 0;font-size:14px;line-height:20px;color:var(--on2);width:100%}
+.ob .rise{opacity:0;transform:translateY(14px)}
+.ob.active .rise{animation:upIn .55s cubic-bezier(.22,.8,.24,1) both}
+/* 8 — social proof */
+.ob-num{font-size:48px;line-height:60px;font-weight:600;color:var(--primary);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.deck{position:relative;width:311px;height:254px;flex:none;cursor:grab;touch-action:pan-y}
+.tc{position:absolute;border-radius:18px;border:1px solid transparent;overflow:hidden;transition:left .6s cubic-bezier(.22,.8,.24,1),top .6s cubic-bezier(.22,.8,.24,1),width .6s cubic-bezier(.22,.8,.24,1),height .6s cubic-bezier(.22,.8,.24,1),opacity .5s,transform .45s cubic-bezier(.5,0,.75,0)}
+.tc .in{position:absolute;left:0;top:0;width:311px;height:234px;transition:opacity .3s}
+.tc.p0 .in{transition-delay:.25s}
+.tc:not(.p0) .in{opacity:0}
+.tc.p0{left:0;top:0;width:311px;height:234px;z-index:3}
+.tc.p1{left:20px;top:144px;width:271px;height:100px;z-index:2;border-radius:16px;border-color:transparent!important}
+.tc.p2{left:40px;top:154px;width:233px;height:100px;z-index:1;border-radius:16px;border-color:transparent!important}
+.tc.y{background:#FFEDC2;border-color:#FFE199;box-shadow:0 6px 16px rgba(255,225,153,.1)}
+.tc.y.p1,.tc.y.p2{background:rgba(255,237,194,.6)}
+.tc.pk{background:#FFE5E4;border-color:#FFD2D0}
+.tc.pk.p1{background:rgba(255,218,217,.64)}.tc.pk.p2{background:rgba(255,218,217,.4)}
+.tc.bl{background:#E4F3FF;border-color:#CBE7FF}
+.tc.bl.p1{background:rgba(213,238,255,.64)}.tc.bl.p2{background:rgba(213,238,255,.4)}
+.tc.out{transform:translate(-130%,-10px) rotate(-10deg);opacity:0}
+.tc .av{position:absolute;left:20px;top:20px;width:40px;height:40px;border-radius:50%;object-fit:cover}
+.tc .q{position:absolute;left:19px;top:74px;width:271px;font-size:14px;line-height:20px;color:var(--on1);margin:0}
+.tc .who{position:absolute;left:19px;top:181px}
+.tc .who b{display:block;font-size:12px;line-height:16px;font-weight:500;color:var(--on1)}
+.tc .who span{display:block;margin-top:4px;font-size:10px;line-height:12px;font-weight:500;color:var(--on2)}
+.tc .qm{position:absolute;right:20px;top:24px;width:29px;height:20px}
+.ag{display:flex}
+.ag span{width:20px;height:20px;border-radius:50%;border:1px solid #fff;overflow:hidden;margin-right:-4px;display:flex;align-items:flex-start;justify-content:center}
+.ag span:last-child{margin-right:0}
+.ag img{width:88%;height:auto;margin-top:-1px}
+/* 9 — matching widget */
+.stack9{position:relative;width:343px;height:370px;flex:none;margin:0 -8px}
+.stack9 .bc{position:absolute;height:100px;border-radius:16px;background:var(--surf-low);border:1px solid var(--outline)}
+.mcard{position:absolute;left:0;top:0;width:343px;height:346px;background:#fff;border:1px solid var(--outline);border-radius:18px;box-shadow:0 6px 20px rgba(83,46,201,.1);overflow:hidden;padding:24px}
+.mcard .t20{margin-bottom:24px}
+.mopts{position:relative;width:295px;display:flex;flex-direction:column;gap:12px}
+.mrow{display:flex;gap:40px;position:relative;z-index:1}
+.mi{width:127.5px;height:40px;box-sizing:border-box;border:1px solid var(--outline);background:#fff;border-radius:8px;padding:0 16px;display:flex;align-items:center;font-size:12px;line-height:16px;font-weight:500;color:var(--on1);position:relative;text-align:left;transition:background .2s,border-color .2s,color .2s}
+.mi.on{background:var(--purple-100);border:2px solid #643FDA;color:#1A006E;padding:0 15px}
+.mi .dot{position:absolute;top:50%;width:16px;height:16px;margin-top:-8px;border-radius:50%;background:#fff;border:1px solid var(--outline);transition:border .2s}
+.mi.L .dot{right:-8.5px}.mi.R .dot{left:-8.5px}
+.mi.on .dot{border:6px solid var(--primary);right:-9.5px}.mi.R.on .dot{left:-9.5px;right:auto}
+.mi.act .dot{border:2px solid var(--primary)}
+.mi.act{border-color:var(--primary)}
+.mi.L.on.act{background:var(--purple-100)}
+.mlines{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:visible}
+.mlines line{stroke:var(--primary);stroke-width:2;stroke-linecap:round}
+.mlines line.draw{animation:lineDraw .45s cubic-bezier(.22,.8,.24,1) both}
+@keyframes lineDraw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+.mcap{position:absolute;left:0;right:0;bottom:0;padding:24px;text-align:center;font-size:14px;line-height:20px;color:var(--on2);background:linear-gradient(to bottom,rgba(255,255,255,0),#fff 50%);transition:color .3s}
+.mcap.ok{color:var(--green-600);font-weight:500}
+/* 10 — study path */
+.path10{position:relative;width:280px;height:304px;flex:none}
+.pc{position:absolute;left:0;width:280px;height:64px;border-radius:16px;background:#fff;border:1px solid var(--outline);display:flex;align-items:center;gap:12px;padding:0 12px;text-align:left;transition:border-color .3s,box-shadow .3s}
+.pc img{width:40px;height:40px;flex:none}
+.pc b{display:block;font-size:16px;line-height:22px;font-weight:500;color:var(--on1)}
+.pc span{display:block;margin-top:2px;font-size:12px;line-height:16px;color:var(--on2)}
+.pc.hl{border:2px solid #EA7920;padding:0 11px;box-shadow:0 6px 16px rgba(83,46,201,.1)}
+.pc.hl img{transform:scale(1.06)}
+.pc img{transition:transform .3s cubic-bezier(.22,.8,.24,1.4)}
+.plink{position:absolute;left:139px;width:2px;height:16px;border-radius:1px;background:var(--surf-high);overflow:hidden}
+.plink i{position:absolute;inset:0;background:#EA7920;transform:scaleY(0);transform-origin:top;transition:transform .3s}
+.plink.f i{transform:scaleY(1)}
+.ob .pop{opacity:0;transform:translateY(10px) scale(.98)}
+.ob.active .pop{animation:upIn .5s cubic-bezier(.22,.8,.24,1) both}
+/* 11 — finale */
+.ob11{position:relative;height:724px;flex:none}
+.ob11 .qc{position:absolute;width:140px;height:130px}
+.ob11 .qc img{position:absolute;left:-12px;top:-8px;width:164px;height:154px}
+.ob11 .ringw{position:absolute;left:68.03px;top:137.11px;width:244px;height:244px}
+.ob11 .ringy{position:absolute;left:104.03px;top:161.11px;width:172px;height:172px;transform:rotate(-90deg)}
+.ob11 .pct{position:absolute;left:0;right:0;top:212px;text-align:center;padding-left:5px;font-size:48px;line-height:56px;font-weight:700;color:var(--primary);font-variant-numeric:tabular-nums}
+.ob11 .ys{position:absolute;left:0;right:0;top:262px;text-align:center;padding-left:5px;font-size:13px;line-height:16px;font-weight:500;color:#666}
+.ob11 .badge-s{position:absolute;left:272.03px;top:165.11px;width:32px;height:32px}
+.ob11 .badge-s img{position:absolute;inset:0}
+.ob11 .badge-s b{position:absolute;left:7.5px;top:5px;font-size:18px;line-height:21px;font-weight:700;color:#fff}
+.ob11 .fin{position:absolute;left:24px;top:452px;width:327px;display:flex;flex-direction:column;gap:48px}
+.ob11 h2{color:#fff}
+.ob11 .desc{color:#fff;opacity:.85}
+.ob11 .have{font-size:14px;line-height:20px;color:var(--surf-high);text-align:center;width:100%}
+.ob.active .qc{animation:qIn .7s cubic-bezier(.22,.8,.24,1.15) both}
+@keyframes qIn{from{opacity:0;transform:translate(var(--fx),40px) rotate(0deg) scale(.7)}to{opacity:1}}
+.ob.active .ringw{animation:popIn .5s cubic-bezier(.22,.8,.24,1.3) .15s both}
+.ob.active .badge-s{animation:starPop .5s cubic-bezier(.22,.8,.24,1.6) 1.3s both}
+@keyframes starPop{from{transform:scale(0) rotate(-90deg)}to{transform:none}}
+.ob11 .fin>*{opacity:0}
+.ob.active .ob11 .fin>*{animation:upIn .55s cubic-bezier(.22,.8,.24,1) both}
+
+/* sign up · phone verification · code — Figma Sign In/Sign Up (EN) */
+.atop{position:relative;flex:none;display:flex;align-items:center;justify-content:center;overflow:visible;margin-top:-54px;padding-top:54px;z-index:0}
+.atop .rg{position:absolute;left:50%;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(255,255,255,.07),rgba(255,255,255,.02) 70%);pointer-events:none}
+.atop img{position:relative;animation:logoIn .7s cubic-bezier(.22,.8,.24,1.3) both}
+.asheet{flex:1;min-height:0;background:#fff;border-radius:24px 24px 0 0;display:flex;flex-direction:column;position:relative;z-index:1}
+.asheet .pad{padding:0 24px;display:flex;flex-direction:column}
+.su-title{text-align:center}
+.flagbox{display:flex;align-items:center;gap:8px;align-self:stretch;padding-right:12px;margin-left:-4px;border-right:1px solid var(--outline)}
+.cc{font-size:14px;color:var(--on1);margin-left:4px}
+.otp{position:relative;display:flex;gap:8px;justify-content:center}
+.otp .bx{width:46px;height:50px;border:1px solid var(--outline);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:22px;color:var(--on1);background:#fff;transition:border-color .15s,transform .15s}
+.otp .bx.cur{border-color:var(--primary);box-shadow:0 0 0 3px rgba(83,46,201,.12)}
+.otp .bx.cur:empty::after{content:"";width:1.5px;height:20px;background:var(--primary);animation:blink 1s steps(1) infinite}
+.otp .bx.fill{animation:digit .22s cubic-bezier(.22,.8,.24,1.4)}
+@keyframes digit{from{transform:scale(.85)}to{transform:none}}
+@keyframes blink{50%{opacity:0}}
+.otp.bad .bx{border-color:var(--red-500)}
+.otp.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.otp.good .bx{border-color:var(--green-500);background:var(--green-100)}
+.otp input{position:absolute;inset:0;opacity:0;font-size:16px;width:100%;caret-color:transparent}
+.ctoast{position:absolute;left:24px;right:24px;bottom:34px;z-index:20;min-height:44px;border-radius:8px;background:var(--red-200);color:var(--red-900);display:flex;align-items:center;gap:8px;padding:0 8px 0 16px;font-size:14px;line-height:20px;animation:upIn .3s cubic-bezier(.22,.8,.24,1) both}
+.ctoast span{flex:1}
+.sms{position:absolute;left:8px;right:8px;top:54px;z-index:70;background:rgba(245,245,247,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:20px;padding:12px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.18);animation:smsIn .5s cubic-bezier(.22,.8,.24,1.1) both;text-align:left;font-family:-apple-system,"SF Pro Text",var(--font)}
+.sms.bye{animation:smsOut .3s ease-in both}
+@keyframes smsIn{from{transform:translateY(-170%)}to{transform:none}}
+@keyframes smsOut{to{transform:translateY(-170%)}}
+.sms .ap{width:38px;height:38px;border-radius:9px;background:linear-gradient(#67E06B,#2FC33A);display:flex;align-items:center;justify-content:center;flex:none}
+.sms b{font-size:13px;line-height:18px;font-weight:600;color:#000}
+.sms p{margin:0;font-size:13px;line-height:18px;color:#222}
+.sms small{font-size:12px;color:#888;margin-left:auto;align-self:flex-start}
+
+/* sign in */
+.si-top{height:176px;flex:none;display:flex;align-items:center;justify-content:center;position:relative}
+.si-top .glow{position:absolute;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.1),rgba(255,255,255,.03) 60%,transparent 72%);top:-26px}
+.si-card{flex:1;background:#fff;border-radius:32px 32px 0 0;padding:44px 32px 0;display:flex;flex-direction:column}
+.cb{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--outline);display:flex;align-items:center;justify-content:center;color:#fff;transition:all .15s}
+.cb.on{background:var(--primary);border-color:var(--primary)}
+.soc{flex:1;height:48px;border-radius:12px;background:var(--surf-low);border:1px solid var(--outline);box-shadow:0 4px 0 var(--surf-high);display:flex;align-items:center;justify-content:center;gap:8px;font-weight:500}
+.soc:active{transform:translateY(3px);box-shadow:0 1px 0 var(--surf-high)}
+
+/* home */
+.hero{padding:0 16px 16px;display:flex;flex-direction:column;gap:8px;flex:none}
+.card12{background:#fff;border-radius:12px}
+.avatar{border-radius:50%;overflow:hidden;flex:none;border:1px solid #fff;display:flex;align-items:flex-end;justify-content:center}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.g-green{background:linear-gradient(#D3F1A7,#B3DF72)}.g-yellow{background:linear-gradient(#FFE9A8,#F9D46A)}.g-purple{background:linear-gradient(#DCD1FF,#B8A6F5)}.g-pink{background:linear-gradient(#C9F0B0,#9FD87D)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 16px;padding:0 16px 24px}
+.bcard{display:flex;flex-direction:column;gap:12px;text-align:left;min-width:0}
+.cover{height:231px;border-radius:12px;overflow:hidden;position:relative;border:.5px solid var(--outline);transition:transform .2s}
+.bcard:active .cover{transform:scale(.97)}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.85))}
+.mathcover{position:absolute;inset:0;background:linear-gradient(160deg,#6A45E0,#2D0D94);color:#fff;padding:16px;display:flex;flex-direction:column;overflow:hidden}
+.mathcover .mc-g{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#FBC02D;font-weight:600}
+.mathcover .mc-t{font-size:30px;line-height:32px;font-weight:700;margin-top:10px;position:relative;z-index:1}
+.mathcover .mc-f{margin-top:auto;font-size:12px;opacity:.8;position:relative;z-index:2}
+.mathcover .mc-s{position:absolute;right:-24px;bottom:30px;width:130px;height:130px}
+.mathcover.sm{padding:6px}.mathcover.sm .mc-g{font-size:5px}.mathcover.sm .mc-t{font-size:12px;line-height:13px;margin-top:4px}.mathcover.sm .mc-f{display:none}.mathcover.sm .mc-s{width:50px;height:50px;right:-10px;bottom:4px}
+.brow .thumb{position:relative}
+.brow{display:flex;gap:16px;padding:12px 16px;text-align:left;width:100%;align-items:center}
+.brow .thumb{width:64px;height:86px;border-radius:8px;overflow:hidden;flex:none;border:.5px solid var(--outline)}
+.brow .thumb img{width:100%;height:100%;object-fit:cover}
+.tabbar{flex:none;background:#fff;border-top:.5px solid var(--outline);border-radius:18px 18px 0 0;box-shadow:0 -4px 5px rgba(0,0,0,.03),0 -2px 3px rgba(0,0,0,.02);position:relative;z-index:4}
+.tabbar.fill::before{content:"";position:absolute;left:0;right:0;top:0;height:18px;background:#fff;z-index:-1}
+.tabbar .items{display:flex;gap:8px;padding:12px 16px 0}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;line-height:16px;color:var(--on2)}
+.tabbar button.on{color:var(--primary)}
+.dd{position:absolute;left:68px;right:68px;top:48px;background:#fff;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.12);z-index:10;overflow:hidden;animation:ddIn .22s cubic-bezier(.22,.8,.24,1) both;transform-origin:top}
+@keyframes ddIn{from{opacity:0;transform:scaleY(.9) translateY(-6px)}}
+.dd button{display:flex;justify-content:space-between;align-items:center;width:100%;height:48px;padding:0 16px;text-align:left}
+.dd button.on{color:var(--primary)}
+
+/* topics */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 16px 16px;overflow:hidden}
+.tile{height:72px;border-radius:12px;color:#fff;padding:12px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;font-size:12px;font-weight:500;line-height:16px;animation:upIn .35s cubic-bezier(.22,.8,.24,1) both}
+.tile:active{transform:translateY(3px);box-shadow:none!important}
+.tile.sum{background:var(--purple-400);box-shadow:0 4px 0 #6D52C3}
+.tile.fr{background:var(--red-500);box-shadow:0 4px 0 #D4433A}
+.tile.ex{background:var(--green-500);box-shadow:0 4px 0 #6F9A2E;animation-delay:.08s}
+.tile.fr{animation-delay:.04s}
+.caret{transition:transform .25s cubic-bezier(.22,.8,.24,1)}
+.open .caret{transform:rotate(90deg)}
+.ktest{margin:0 16px 16px;padding:16px;border-radius:18px;background:var(--surf-low);border:1px solid var(--outline);display:flex;flex-direction:column;gap:16px;flex:none}
+.ktest.onp{background:#fff;border:0;margin-top:16px}
+
+/* quiz */
+.qcard{flex:1;min-height:0;margin:0 16px;background:#fff;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.qpills{display:flex;gap:12px;padding:12px 16px;overflow-x:auto;scrollbar-width:none;flex:none;scroll-behavior:smooth}
+.qpills::-webkit-scrollbar{display:none}
+.qp{width:32px;height:32px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:14px;background:var(--purple-100);color:var(--primary);border:1px solid transparent;transition:all .25s}
+.qp.cur{background:var(--primary);color:#fff;transform:scale(1.06)}
+.qp.ok{background:var(--green-100);border-color:var(--green-200);color:var(--green-600)}
+.qp.bad{background:var(--red-100);border-color:var(--red-200);color:var(--red-600)}
+.qmeta{display:flex;align-items:center;justify-content:space-between;padding:4px 24px 12px;border-bottom:1px solid var(--outline);flex:none}
+.bolts{display:flex;gap:2px}
+.qbody{flex:1;min-height:0;overflow-y:auto;padding:24px;scrollbar-width:none}
+.qbody::-webkit-scrollbar{display:none}
+.qtext{font-size:20px;line-height:26px;font-weight:500;margin:0 0 24px;transition:font-size .2s}
+.big .qtext{font-size:24px;line-height:31px}
+.opts{display:flex;flex-direction:column;gap:12px}
+.opts.tf{flex-direction:row}
+.opts.tf .opt{flex:1}
+.opt{min-height:40px;padding:10px 16px;border-radius:8px;border:1px solid var(--outline);font-size:12px;line-height:16px;font-weight:500;text-align:left;transition:background .2s,border-color .2s,color .2s,transform .12s;display:flex;align-items:center}
+.big .opt{font-size:15px;line-height:20px}
+.opt:active{transform:scale(.98)}
+.opt.sel{background:var(--purple-100);border:2px solid var(--primary);color:var(--primary-800);padding:9px 15px}
+.opt.right{background:var(--green-100);border:2px solid var(--green-500);color:var(--green-900);padding:9px 15px}
+.opt.wrong{background:var(--red-100);border:2px solid var(--red-500);color:var(--red-900);padding:9px 15px;animation:shake .4s}
+.opt.dim{background:var(--outline);border-color:var(--outline);color:var(--dis)}
+@keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.qfoot{flex:none;text-align:center;padding:16px;color:var(--on2)}
+.verdict{margin:0 24px 16px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;flex:none;animation:upIn .3s ease both}
+.verdict.bad{background:var(--red-100);border:1px solid var(--red-200);color:var(--red-600)}
+.verdict.ok{background:var(--green-100);border:1px solid var(--green-200);color:var(--green-600)}
+.details{margin-top:24px;animation:fadeIn .4s ease both}
+.qbar{flex:none;display:flex;justify-content:space-between;align-items:center;padding:16px 16px 4px}
+.qbar .btn{width:auto;padding:0 18px;min-width:84px}
+
+/* flashcards */
+.fc-area{flex:1;position:relative;margin:16px 16px 0;perspective:1200px}
+.fc-stack{position:absolute;left:24px;right:24px;bottom:-24px;height:40px;border-radius:0 0 18px 18px;background:#8F78E6}
+.fc-stack.b{left:48px;right:48px;bottom:-40px;background:#7559DA}
+.fc{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.22,.8,.24,1);cursor:grab;touch-action:none}
+.fc.flipped{transform:rotateY(180deg)}
+.fc .face{position:absolute;inset:0;background:#fff;border-radius:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;padding:20px 24px}
+.fc .back{transform:rotateY(180deg)}
+.fc .mid{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:24px;line-height:31px;font-weight:500}
+.fc .back .mid{font-size:18px;line-height:26px}
+.fc-stamp{position:absolute;top:24px;padding:6px 12px;border-radius:8px;font-weight:600;font-size:14px;opacity:0;border:2px solid}
+.fc-bar{margin:52px 16px 0;background:#fff;border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px;flex:none}
+.fc-bar .btn.sq{height:48px}
+
+/* results */
+.donut{position:relative;width:200px;height:200px;margin:0 auto}
+.donut svg{transform:rotate(-90deg)}
+.donut .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.stats3{display:flex;border:1px solid var(--outline);border-radius:12px;padding:12px 0}
+.stats3>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;border-left:1px solid var(--outline)}
+.stats3>div:first-child{border-left:0}
+.dotn{width:16px;height:16px;border-radius:50%;color:#fff;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center}
+
+/* friends — Figma "Friends" flow (9179:5565) */
+.fsec{display:flex;justify-content:space-between;align-items:center;padding:24px 16px 16px}
+.fsec .link{font-size:14px}
+.car{display:flex;gap:12px;overflow-x:auto;padding:0 16px 4px;scrollbar-width:none;scroll-snap-type:x mandatory}
+.car::-webkit-scrollbar{display:none}
+.fi{flex:none;width:88px;display:flex;flex-direction:column;align-items:center;text-align:center;scroll-snap-align:start;transition:opacity .3s,transform .3s,width .35s,margin .35s}
+.fi.wide{width:106px}
+.fi.gone{opacity:0;transform:scale(.8);width:0;margin-right:-12px}
+.fav{position:relative;border-radius:50%;flex:none}
+.fav .avatar{border:0}
+.fav .more{position:absolute;right:-2px;top:-2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;color:var(--on2)}
+.fav .num{position:absolute;left:0;bottom:0;width:20px;height:20px;border-radius:50%;font-size:12px;line-height:20px;font-weight:500;text-align:center;border:1.5px solid #fff;box-sizing:content-box}
+.fav .hex{position:absolute;left:22px;bottom:-2px;width:22px;height:24px;object-fit:contain}
+.fav.big .num{width:26px;height:26px;line-height:26px;font-size:14px;left:6px}
+.fav.big .hex{left:36px;width:28px;height:30px;bottom:-4px}
+.fi .nm{margin-top:10px;font-size:14px;line-height:20px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.sc{display:flex;gap:6px;align-items:center;justify-content:center;font-size:14px;line-height:20px;color:var(--on1);margin-top:2px}
+.yn{display:flex;gap:10px;margin-top:12px}
+.acc,.rej{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:transform .12s,box-shadow .12s}
+.acc{background:var(--primary);color:#fff;box-shadow:0 3px 0 var(--primary-800)}
+.rej{background:var(--surf-low);border:1px solid var(--outline);color:var(--on1);box-shadow:0 3px 0 var(--surf-high)}
+.acc:active,.rej:active{transform:translateY(2px);box-shadow:0 1px 0 var(--surf-high)}
+.acc.done{background:var(--green-500);box-shadow:0 3px 0 var(--green-600)}
+.mstack{display:flex;align-items:center}
+.mstack span{width:16px;height:16px;border-radius:50%;overflow:hidden;border:1px solid #fff;margin-left:-5px;background:var(--purple-100)}
+.mstack span:first-child{margin-left:0}
+.mstack img{width:100%;height:100%;object-fit:cover}
+.mstack b{margin-left:-5px;height:16px;min-width:16px;padding:0 3px;border-radius:8px;background:#FFD5D2;color:var(--red-900);font-size:8px;line-height:16px;font-weight:600;border:1px solid #fff}
+.frow{display:flex;align-items:center;gap:12px;padding:12px 16px;transition:opacity .3s,transform .3s}
+.frow.gone{opacity:0;transform:translateX(-30px)}
+.frow .grow{flex:1;min-width:0}
+.frow .sc{justify-content:flex-start}
+.findc{display:flex;align-items:center;gap:12px;height:64px;border:1px solid var(--on1);border-radius:12px;padding:0 16px;width:100%;text-align:left;font-size:16px;line-height:22px;font-weight:500;transition:background .15s}
+.findc:active{background:var(--surf-low)}
+.findc img{width:36px;height:36px;object-fit:contain}
+.sgc{flex:none;width:128px;border-radius:12px;background:var(--surf-low);border:1px solid var(--outline);box-shadow:0 4px 0 var(--surf-high);display:flex;flex-direction:column;align-items:center;padding:16px 8px 14px;scroll-snap-align:start;margin-bottom:6px}
+.sgc .l10{font-size:10px;line-height:12px;font-weight:500;color:var(--on1);margin:8px 0 4px}
+.addb{width:56px;height:36px;border-radius:10px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 var(--primary-800);margin-top:12px;transition:background .2s}
+.addb.sent{background:var(--green-500);box-shadow:0 3px 0 var(--green-600)}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:12px;padding:24px 8px 16px}
+.podium .fi{width:104px}
+.pstats{display:flex;justify-content:space-between;padding:0 24px;margin-top:24px}
+.pstats>div{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ovw{margin:24px 16px 0;background:var(--purple-100);border-radius:16px;padding:12px 8px 8px}
+.ovw .tiles{display:flex;gap:6px;margin-top:12px}
+.ovw .tiles>div{flex:1;background:#fff;border-radius:10px;height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.srch{height:40px;flex:1;border:1px solid var(--primary);border-radius:10px;display:flex;align-items:center;gap:10px;padding:0 6px 0 14px}
+.srch input{flex:1;border:0;outline:0;font:inherit;font-size:14px;color:var(--on1);background:transparent;min-width:0}
+.srch input::placeholder{color:var(--on2)}
+
+/* friends / bookmarks */
+.awards{margin:16px 16px 0;background:var(--purple-100);border-radius:12px;padding:12px 8px 8px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.awards .three{display:flex;gap:8px;width:100%}
+.awards .three>div{flex:1;background:#fff;border-radius:10px;padding:12px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.friend{display:flex;align-items:center;gap:16px;padding:12px 16px}
+.friend .av{position:relative}
+.friend .rk{position:absolute;top:-4px;right:-4px;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff}
+.online{position:absolute;bottom:2px;right:2px;width:10px;height:10px;border-radius:50%;background:var(--green-500);border:2px solid #fff}
+.chatb{position:relative;color:var(--on1)}
+.chatb .badge{position:absolute;top:-8px;right:-8px;background:var(--red-500);color:#fff;border:1.5px solid #fff;height:20px;min-width:20px;line-height:17px;border-radius:10px}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:8px;font-size:14px;border:1px solid}
+.tag .badge{color:#fff}
+.tag.sum{background:var(--purple-100);border-color:#D7CCFA;color:var(--primary)}.tag.sum .badge{background:var(--primary)}
+.tag.fr{background:var(--red-100);border-color:var(--red-200);color:var(--red-600)}.tag.fr .badge{background:var(--red-500)}
+.tag.ex{background:var(--green-100);border-color:var(--green-200);color:var(--green-600)}.tag.ex .badge{background:var(--green-500)}
+.tag.exam{background:var(--yellow-100);border-color:#F6E2A0;color:#8A6A00}.tag.exam .badge{background:#E4B200}
+.bgroup{border:1px solid var(--outline);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;position:relative}
+.menu{position:absolute;right:12px;top:40px;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:5;animation:ddIn .2s ease both;overflow:hidden}
+.menu button{display:flex;gap:12px;align-items:center;height:44px;padding:0 20px 0 16px;width:100%}
+.pdf{background:#F4F1EA;flex:1;min-height:0;overflow-y:auto;scrollbar-width:none}
+.pdf::-webkit-scrollbar{display:none}
+.pdf img{width:100%;display:block}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:30}
+.confetti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--dx),860px) rotate(var(--r))}}
+.pressable{transition:transform .12s}
+.pressable:active{transform:scale(.98)}
+</style>
+
+<div class="stage">
+  <aside class="side" aria-label="Prototype guide">
+    <div class="eyebrow">Muthabr · iOS · 375 × 812</div>
+    <h1>Muthabr interactive prototype</h1>
+    <p>Built from the Muthabr Figma file with the app's own tokens, Rubik type and assets. Every tap, swipe and answer works.</p>
+    <nav class="flows" aria-label="Jump to a flow">
+      <button data-jump="splash"><span>Splash and onboarding</span><span>4 slides</span></button>
+      <button data-jump="signup"><span>Create account</span><span>phone · OTP</span></button>
+      <button data-jump="signin"><span>Sign in</span><span>validation</span></button>
+      <button data-jump="home"><span>Syllabus home</span><span>grid · rows</span></button>
+      <button data-jump="topics"><span>Study path</span><span>unit → topic</span></button>
+      <button data-jump="flash"><span>Fast review</span><span>flashcards</span></button>
+      <button data-jump="quiz"><span>Exercise</span><span>5 questions</span></button>
+      <button data-jump="friends"><span>Friends</span><span>requests · profile</span></button>
+      <button data-jump="bookmarks"><span>Bookmarks</span><span>groups</span></button>
+    </nav>
+    <p class="hint">Tip: drag flashcards left or right, tap a card to flip it, and press <b>Aa</b> in an exercise to enlarge the text.</p>
+  </aside>
+  <div class="device" id="device">
+    <div class="bezel"></div>
+    <div class="screen-wrap"><div class="app" id="app"></div></div>
+  </div>
+</div>
+
+<script src="icons.js"></script>
+<script>
+(function(){
+const A = 'assets/';
+const $app = document.getElementById('app');
+const ic = (n, cls='', color='') => `<svg class="ic ${cls}" viewBox="0 0 256 256" fill="currentColor" ${color?`style="color:${color}"`:''} aria-hidden="true">${(window.ICONS[n]||'')}</svg>`;
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------------- data ---------------- */
+// Basic Math is the book the Figma study-path screens use (Units → Numbers → Adding more Numbers).
+// Its cover is not in the file, so it gets a typographic cover in the Muthabr palette.
+const BOOKS = [
+  {id:'mat', title:'Basic Math', cover:null, done:12, total:30, dl:true,
+    units:[['Geometry',5],['Numbers',7],['Measurement',3],['Addition and Subtraction',5],['Multiplication and Division',7],['Fractions',3],['Decimals',5],['Percentages',7],['Algebra',3]],
+    topics:['Parallel and Perpendicular Lines','Arranging and Rounding','Adding more Numbers','Multiplication and Division Facts','Written Methods of Multiplication'],
+    lessons:['Introduction to Adding Multiple Numbers','Techniques for Grouping Numbers in Addition','Using Number Lines for Adding Multiple Values','Applying the Associative Property in Addition','Strategies for Adding Large Numbers']},
+  {id:'bio', title:'Biology', cover:'cover-biology.jpg', done:10, total:36, dl:false,
+    units:[['Cell Structure',6],['Genetics',5],['Ecosystems',4]],
+    topics:['Cell Theory','Plant and Animal Cells','The Cell Membrane','How Cells Divide','Specialised Cells'],
+    lessons:['Introduction to Cells','Organelles and Their Jobs','Diffusion and Osmosis','Mitosis Step by Step','Cells Working Together']},
+  {id:'soc', title:'Social Studies', cover:'cover-social.jpg', done:10, total:36, dl:true,
+    units:[['Geography of Oman',5],['Ancient Civilisations',4],['Citizenship',3]],
+    topics:['Mountains, Deserts and Coasts','Climate Zones','Wadis and Water','Coastal Cities','Natural Resources'],
+    lessons:['Reading a Physical Map','The Hajar Mountains','Life Along the Coast','How Falaj Irrigation Works','Protecting Natural Resources']},
+  {id:'eng', title:'English Insights: Workbook', cover:'cover-english.jpg', done:5, total:10, dl:false,
+    units:[['Reading Skills',5],['Grammar in Use',6],['Writing',3]],
+    topics:['Skimming and Scanning','Finding the Main Idea','Context Clues','Making Inferences','Summarising a Text'],
+    lessons:['Reading for Gist','Spotting Key Details','Using Context to Guess Meaning','Reading Between the Lines','Writing a Short Summary']},
+  {id:'egg', title:'Engage With English: Coursebook', cover:'cover-engage.jpg', done:2, total:10, dl:false,
+    units:[['Everyday English',4],['Stories and Myths',5],['Speaking Skills',3]],
+    topics:['Greetings and Introductions','Talking About Routines','Asking for Directions','Making Plans','Polite Requests'],
+    lessons:['Meeting New People','Daily Routines','Finding Your Way','Future Plans','Asking Politely']},
+];
+const STATES = ['done','done','prog','prog','prog'];
+let TOPICS = [], LESSONS = [];
+function useBook(b){ S.book=b; TOPICS=b.topics.map((t,k)=>({t, s:STATES[k]})); LESSONS=b.lessons; }
+const EX_SCORES = [[5,10],[1,10],[6,10],[3,10],[9,10]];
+const QUIZ = [
+  {type:'mr', q:'Which type of triangle has all three sides of equal length?', o:['Scalene triangle','Isosceles triangle','Equilateral triangle','Right triangle'], a:2,
+   d:'An equilateral triangle is a type of triangle where all three sides are of equal length. This characteristic makes it unique among other types of triangles.'},
+  {type:'tf', q:'A right triangle can have one angle that is greater than 90 degrees.', o:['True','False'], a:1,
+   d:'A right triangle has one angle of exactly 90°. The other two angles share the remaining 90°, so none of them can be larger than 90°.'},
+  {type:'mr', q:'What is 248 + 157 + 95?', o:['490','492','500','510'], a:2,
+   d:'Group the friendly numbers first: 157 + 95 = 252, then 248 + 252 = 500.'},
+  {type:'tf', q:'Changing the order of the numbers you add changes the total.', o:['True','False'], a:1,
+   d:'The commutative property of addition says that a + b = b + a. The order of the numbers never changes the sum.'},
+  {type:'mr', q:'Which property says (a + b) + c = a + (b + c)?', o:['Commutative property','Associative property','Distributive property','Identity property'], a:1,
+   d:'The associative property lets you regroup numbers in a sum without changing the total.'},
+];
+const CARDS = [
+  {q:'Define the Odium', a:'"Odium" refers to general or widespread hatred or disgust directed toward someone as a result of their actions or behavior, often implying intense public disapproval and condemnation.'},
+  {q:'What is a sum?', a:'The result you get when you add two or more numbers together.'},
+  {q:'What is an addend?', a:'Any of the numbers being added together in an addition problem.'},
+  {q:'Associative property', a:'Changing how numbers are grouped in a sum does not change the total: (a + b) + c = a + (b + c).'},
+  {q:'What is a number line?', a:'A straight line with numbers placed at equal intervals, used to count on or back when adding and subtracting.'},
+];
+const FRIENDS = [
+  {n:'Alex Lamar', s:'1 000', av:'av-tyler.png', g:'g-green', rk:1, rank:'rank-purple.png', msg:1, on:true},
+  {n:'Nick Mayer', s:'999', av:'av-nick.png', g:'g-yellow', rk:2, rank:'rank-purple.png', msg:3},
+  {n:'Lisa Brown', s:'998', av:'av-lisa.png', g:'g-purple', rk:3, rank:'rank-purple.png', msg:0, on:true},
+  {n:'Mira Schleifer', s:'600', av:'av-mira.png', g:'g-pink', rank:'rank-gold.png', msg:'9+'},
+  {n:'Madelyn Philips', s:'300', av:'av-madelyn.png', g:'g-yellow', rank:'rank-silver.png', msg:0},
+  {n:'Tatiana Saris', s:'120', av:'av-lisa.png', g:'g-green', rank:'rank-bronze.png', msg:0},
+];
+
+/* ---------------- state ---------------- */
+const S = {
+  view:'grid', seg:'all', sem:'First Semester', book:null, unit:'Numbers', topicOpen:2, tab:'syllabus',
+  remember:true, bookmarked:false, summariesRead:[true,true,true,false,false],
+  quiz:null, flash:null, bmSeg:'bm', textBig:false
+};
+useBook(BOOKS[0]);
+
+/* ---------------- router ---------------- */
+let stack = [];   // [{name, params, el}]
+const R = {};     // render functions
+function render(name, params){ const el=document.createElement('div'); el.className='scr'; el.dataset.name=name; R[name](el, params||{}); return el; }
+function go(name, params, mode='push'){
+  closeOverlay(true);
+  const el = render(name, params);
+  const prev = stack[stack.length-1];
+  if(mode==='push' && prev){
+    el.classList.add('anim-in-right'); prev.el.classList.add('anim-out-left');
+    $app.appendChild(el);
+    const p=prev; setTimeout(()=>{p.el.remove(); p.el.classList.remove('anim-out-left');}, 430);
+    stack.push({name, params, el});
+  } else {
+    // replace whole stack (fade / root)
+    el.classList.add(mode==='up' ? 'anim-up' : 'anim-fade-in');
+    $app.appendChild(el);
+    stack.forEach(s=>{ const old=s.el; setTimeout(()=>old.remove(), 340); });
+    stack=[{name, params, el}];
+  }
+  el.addEventListener('animationend', ()=>el.classList.remove('anim-in-right','anim-up','anim-fade-in'), {once:true});
+}
+function back(){
+  closeOverlay(true);
+  if(stack.length<2) return;
+  const cur = stack.pop(); const prev = stack[stack.length-1];
+  prev.el = render(prev.name, prev.params);
+  prev.el.classList.add('anim-in-left'); cur.el.classList.add('anim-out-right');
+  $app.insertBefore(prev.el, cur.el);
+  setTimeout(()=>{cur.el.remove(); prev.el.classList.remove('anim-in-left');}, 430);
+}
+function rerender(){ const top=stack[stack.length-1]; if(!top) return; const sc = top.el.querySelector('.scroll'); const y = sc?sc.scrollTop:0; const el=render(top.name, top.params); $app.replaceChild(el, top.el); top.el=el; const sc2=el.querySelector('.scroll'); if(sc2) sc2.scrollTop=y; }
+function bind(el, sel, fn){ el.querySelectorAll(sel).forEach(n=>n.addEventListener('click', e=>{e.stopPropagation(); fn(n, e);})); }
+
+/* overlays */
+let ov=null;
+function overlay(html, {center=false, onClose}={}){
+  closeOverlay(true);
+  ov=document.createElement('div'); ov.className='overlay'+(center?' center':'');
+  ov.innerHTML=`<div class="dim"></div><div class="bs">${html}</div>`;
+  ov.querySelector('.dim').addEventListener('click', ()=>closeOverlay());
+  ov._onClose=onClose;
+  $app.appendChild(ov); return ov.querySelector('.bs');
+}
+function closeOverlay(instant){
+  if(!ov) return; const o=ov; ov=null;
+  if(instant){o.remove(); return;}
+  o.classList.add('closing'); setTimeout(()=>o.remove(), 260);
+}
+function toast(msg, icon='check-circle'){
+  const t=document.createElement('div'); t.className='toast'; t.innerHTML=`${ic('f-'+icon,'s20',icon==='check-circle'?'#82B536':'')}<span>${msg}</span>`;
+  $app.appendChild(t); setTimeout(()=>{t.style.transition='opacity .3s'; t.style.opacity=0; setTimeout(()=>t.remove(),300);}, 1800);
+}
+function confetti(n=70){
+  const c=document.createElement('div'); c.className='confetti';
+  const cols=['#532EC9','#8060E5','#FBC02D','#82B536','#F15B50','#EFEAFF'];
+  for(let i=0;i<n;i++){ const p=document.createElement('i'); p.style.left=Math.random()*100+'%'; p.style.background=cols[i%cols.length];
+    p.style.setProperty('--dx',(Math.random()*120-60)+'px'); p.style.setProperty('--r',(Math.random()*720-360)+'deg');
+    p.style.animationDuration=(1.6+Math.random()*1.4)+'s'; p.style.animationDelay=(Math.random()*.4)+'s'; c.appendChild(p);}
+  $app.appendChild(c); setTimeout(()=>c.remove(), 3600);
+}
+
+/* ---------------- shared pieces ---------------- */
+const statusBar = (dark) => `<div class="status ${dark?'dark':''}"><span>9:41</span><span class="lv">
+ <svg width="19" height="12" viewBox="0 0 19 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+ <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 2.4c2.3 0 4.4.9 6 2.4l1.2-1.2A10.2 10.2 0 0 0 8.5.7 10.2 10.2 0 0 0 1.3 3.6l1.2 1.2a8.5 8.5 0 0 1 6-2.4Zm0 3.4c1.4 0 2.6.5 3.6 1.4l1.2-1.2a6.8 6.8 0 0 0-4.8-1.9c-1.8 0-3.5.7-4.8 1.9l1.2 1.2c1-.9 2.2-1.4 3.6-1.4Zm0 3.4c-.6 0-1.2.2-1.6.6L8.5 11.4l1.6-1.6c-.4-.4-1-.6-1.6-.6Z"/></svg>
+ <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x=".5" y=".5" width="23" height="12" rx="3.8" stroke="currentColor" opacity=".35"/><rect x="2" y="2" width="20" height="9" rx="2.5" fill="currentColor"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2Z" fill="currentColor" opacity=".4"/></svg>
+ </span></div>`;
+const homeInd = (light) => `<div class="home-ind ${light?'light':''}"><i></i></div>`;
+const avatar = (src, g, size) => `<span class="avatar ${g}" style="width:${size}px;height:${size}px"><img src="${A+src}" alt=""></span>`;
+const star = (s=26) => `<img src="${A}star.svg" width="${s}" height="${s}" alt="">`;
+const ringIcon = (p=.3) => { const r=8, c=2*Math.PI*r; return `<svg class="ring" viewBox="0 0 20 20"><circle cx="10" cy="10" r="${r}" fill="none" stroke="#EBEBEB" stroke-width="2"/><circle cx="10" cy="10" r="${r}" fill="none" stroke="#532EC9" stroke-width="2" stroke-linecap="round" stroke-dasharray="${c*p} ${c}" transform="rotate(-90 10 10)"/></svg>`; };
+const doneIcon = () => `<span class="check done">${ic('r-check','s16')}</span>`;
+const navBar = ({title, sub, dot, left='arrow-left', right, onPurple}) => `<div class="nav ${onPurple?'on-purple':''}">
+  ${left?`<button class="icbtn" data-act="back" aria-label="Back">${ic('r-'+left)}</button>`:'<span style="width:40px"></span>'}
+  <div class="t">${esc(title)}${sub?`<small><i style="background:${dot}"></i>${sub}</small>`:''}</div>
+  ${right?`<button class="icbtn" data-act="right" aria-label="More">${ic('r-'+right)}</button>`:'<span style="width:40px"></span>'}
+</div>`;
+function wireBack(el){ bind(el, '[data-act="back"]', ()=>back()); }
+
+/* ---------------- screens ---------------- */
+R.splash = (el) => {
+  el.classList.add('splash');
+  el.innerHTML = `${statusBar()}<div class="rings">${[620,470,330,200].map(s=>`<i style="width:${s}px;height:${s}px;margin-top:-27px"></i>`).join('')}</div>
+   <div style="flex:1;display:flex;align-items:center;justify-content:center;margin-top:-54px"><img class="logo" src="${A}logo-white.svg" alt="Muthabr"></div>${homeInd(true)}`;
+  clearTimeout(R._splashT); R._splashT = setTimeout(()=>{ if(stack[stack.length-1]?.name==='splash') go('onboarding',{},'fade'); }, 1900);
+};
+
+R.onboarding = (el) => {
+  el.classList.add('onb');
+  let i = 0;
+  const TESTI = [
+    {c:'y',  av:'ob-turki.png', who:'Turki Al Maamari', role:'Parent', q:'My son depends on Muthabr — it summarises his lessons with simple, beautiful explanations 😍'},
+    {c:'pk', av:'ob-av3.png', who:'Salma Al Harthy', role:'Student · Grade 11', q:'Fast Review before every test changed everything. I finally finish revising a whole unit in one evening.'},
+    {c:'bl', av:'ob-av2.png', who:'Ms. Maryam', role:'Teacher', q:'My students arrive prepared. Every unit follows the same clear path, so nobody gets lost.'},
+  ];
+  const head = (k) => `<div class="ob-head">${k?`<button class="bk" data-prev aria-label="Back">${ic('r-arrow-left','s20')}</button>`:'<span style="width:36px"></span>'}<button class="skip" data-skip>Skip</button></div>`;
+  const foot = (k) => `<div class="ob-act"><div class="ob-dots">${[0,1,2,3].map(d=>`<i class="${d===k?'on':''}"></i>`).join('')}</div><button class="obtn" data-next>Next</button></div>`;
+  const qmark = `<svg class="qm" viewBox="0 0 29 20"><path fill="#532EC9" fill-rule="evenodd" d="M5.425 4.545a6.9 6.9 0 0 1 1.419-.169c3.78 0 6.843 3.498 6.843 7.811S10.624 20 6.844 20 0 16.503 0 12.188c0-.127.002-.254.008-.38H0C0 5.297 4.64 0 10.343 0v2.622c-1.85 0-3.556.719-4.918 1.923Zm15.315 0a6.9 6.9 0 0 1 1.416-.169c3.78 0 6.844 3.498 6.844 7.811S25.936 20 22.156 20s-6.843-3.497-6.843-7.812c0-.127.002-.254.009-.38h-.009C15.313 5.297 19.953 0 25.657 0v2.622c-1.852 0-3.555.719-4.917 1.923Z"/></svg>`;
+  el.innerHTML = `${statusBar()}
+  <div style="flex:1;min-height:0;overflow:hidden;display:flex"><div class="track">
+    <section class="ob s8"><div class="ob-sheet">${head(0)}
+      <div class="ob-body" style="gap:40px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px" class="rise"><div class="ob-num" data-count>110,000+</div><div class="t20">Students rely on Muthabr</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+          <div class="deck rise" style="animation-delay:.12s" data-deck>
+            ${TESTI.map((t,k)=>`<div class="tc ${t.c} p${k}" data-k="${k}"><div class="in">
+              <img class="av" src="${A+t.av}" alt="" style="background:#EFEAFF">${qmark}
+              <p class="q">${t.q}</p><div class="who"><b>${t.who}</b><span>${t.role}</span></div></div></div>`).join('')}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;animation-delay:.2s" class="rise">
+            <span class="ag"><span style="background:linear-gradient(#D3F1A7,#B3DF72)"><img src="${A}ob-av1.png" alt=""></span><span style="background:linear-gradient(#F8E6A0,#F5CD47)"><img src="${A}ob-av2.png" alt=""></span><span style="background:linear-gradient(#DCD1FF,#B299FF)"><img src="${A}ob-av3.png" alt=""></span></span>
+            <span class="t16">9.7/10 user satisfaction rate</span></div>
+        </div>
+      </div>${foot(0)}</div>${homeInd()}</section>
+
+    <section class="ob s9"><div class="ob-sheet">${head(1)}
+      <div class="ob-body" style="gap:24px">
+        <div class="stack9 pop">
+          <div class="bc" style="left:24px;top:258px;width:295px;opacity:.8"></div>
+          <div class="bc" style="left:48px;top:270px;width:247px;opacity:.64"></div>
+          <div class="mcard"><div class="t20">Calculate math examples</div>
+            <div class="mopts" data-mopts><svg class="mlines" data-lines></svg>
+              ${[['15 + 15','27'],['2 * 5','4'],['40 / 10','30'],['100 - 63','10']].map(([l,r],k)=>`<div class="mrow"><button class="mi L" data-l="${k}">${l}<span class="dot"></span></button><button class="mi R" data-r="${k}">${r}<span class="dot"></span></button></div>`).join('')}
+            </div>
+            <div class="mcap" data-mcap>Match answers with a line</div>
+          </div>
+        </div>
+        <div style="width:100%;animation-delay:.1s" class="rise"><h2>Study smart and fast, not hard and exhausted</h2><p class="desc" style="width:325px">Muthabr makes studying every subject easier, and more fun.</p></div>
+      </div>${foot(1)}</div>${homeInd()}</section>
+
+    <section class="ob s10"><div class="ob-sheet">${head(2)}
+      <div class="ob-body" style="gap:88px">
+        <div class="path10" data-path>
+          ${[['Summary','Key concepts','ob-ic-summary.svg'],['Fast Review','Flashcards & recall','ob-ic-review.svg'],['Exercises','Practice & apply','ob-ic-exercise.svg'],['Exams','Test yourself','ob-ic-exam.svg']].map(([t,s,img],k)=>`
+            ${k?`<div class="plink" style="top:${k*80-16}px"><i></i></div>`:''}
+            <button class="pc pop ${k===3?'hl':''}" data-pc="${k}" style="top:${k*80}px;animation-delay:${.08+k*.09}s"><img src="${A+img}" alt=""><span style="margin:0"><b>${t}</b><span>${s}</span></span></button>`).join('')}
+        </div>
+        <div style="width:100%;animation-delay:.3s" class="rise"><h2>Every lesson, one clear study path</h2><p class="desc" style="width:325px">Summary → Fast review → Exercises → Exams</p></div>
+      </div>${foot(2)}</div>${homeInd()}</section>
+
+    <section class="ob s11"><div class="ob11">
+      <div class="qc" style="left:44.98px;top:155.24px;transform:rotate(12deg);--fx:60px;animation-delay:.05s"><img src="${A}ob-q1.svg" alt=""></div>
+      <div class="qc" style="left:192.01px;top:131.13px;transform:rotate(-12deg);--fx:-60px;animation-delay:.12s"><img src="${A}ob-q2.svg" alt=""></div>
+      <div class="qc" style="left:120.03px;top:152.11px;--fx:0px;animation-delay:.08s"><img src="${A}ob-q3.svg" alt=""></div>
+      <img class="ringw" src="${A}ob-ring.svg" alt="">
+      <svg class="ringy" viewBox="0 0 172 172"><circle data-ring cx="86" cy="86" r="82" fill="none" stroke="#FBC02D" stroke-width="8" stroke-dasharray="515.2" stroke-dashoffset="515.2"/></svg>
+      <div class="pct" data-pct>0%</div><div class="ys">Your score</div>
+      <div class="badge-s"><img src="${A}ob-starc.svg" alt=""><b>★</b></div>
+      <div class="fin">
+        <div style="animation-delay:.35s"><h2>Excel in exams with ease</h2><p class="desc">With smart techniques that lock in knowledge and deepen understanding.</p></div>
+        <div style="display:flex;flex-direction:column;gap:16px;align-items:center;animation-delay:.5s"><button class="obtn light" data-start>Get started</button><button class="have" data-have>I already have an account</button></div>
+      </div>
+    </div>${homeInd(true)}</section>
+  </div></div>`;
+  el.querySelectorAll('.s8 .home-ind,.s9 .home-ind,.s10 .home-ind').forEach(h=>h.classList.add('w'));
+  const track=el.querySelector('.track'), slides=[...el.querySelectorAll('.ob')];
+  const timers=[]; const later=(fn,ms)=>{ const t=setTimeout(()=>{ if(el.isConnected) fn(); },ms); timers.push(t); return t; };
+  const clearT=()=>{ while(timers.length) clearTimeout(timers.pop()); };
+
+  /* 8 · count-up + testimonial deck */
+  const countUp=()=>{ const n=el.querySelector('[data-count]'); const t0=performance.now(); const f=t=>{ if(!el.isConnected) return; const p=Math.min(1,(t-t0)/1300); n.textContent=Math.round(110000*(1-Math.pow(1-p,3))).toLocaleString('en-US')+'+'; if(p<1) requestAnimationFrame(f);}; requestAnimationFrame(f); };
+  let order=[0,1,2], deckT=null, deckBusy=false;
+  const cards=[...el.querySelectorAll('.tc')];
+  const layDeck=()=>order.forEach((k,pos)=>{ const c=cards[k]; c.classList.remove('p0','p1','p2'); c.classList.add('p'+pos); });
+  const nextCard=()=>{ if(deckBusy) return; deckBusy=true; const front=cards[order[0]]; front.classList.add('out');
+    setTimeout(()=>{ order=[order[1],order[2],order[0]]; front.style.transition='none'; front.classList.remove('out'); layDeck(); front.offsetWidth; front.style.transition=''; deckBusy=false; }, 380);
+  };
+  const startDeck=()=>{ clearInterval(deckT); deckT=setInterval(()=>{ if(!el.isConnected){clearInterval(deckT);return;} if(i===0) nextCard(); }, 3400); };
+  const deck=el.querySelector('[data-deck]'); let dx0=null;
+  deck.addEventListener('pointerdown',e=>{dx0=e.clientX; e.stopPropagation();});
+  deck.addEventListener('pointerup',e=>{ e.stopPropagation(); if(dx0===null) return; const d=e.clientX-dx0; dx0=null; if(Math.abs(d)<8||d<-30){ nextCard(); startDeck(); } });
+
+  /* 9 · matching widget — tap or drag from a left answer to a right answer */
+  const mopts=el.querySelector('[data-mopts]'), svg=el.querySelector('[data-lines]'), cap=el.querySelector('[data-mcap]');
+  const Ls=[...el.querySelectorAll('.mi.L')], Rs=[...el.querySelectorAll('.mi.R')];
+  let links={}, active=null, dragLine=null, ghost=null;
+  const yOf=k=>k*52+20, XL=127, XR=168;
+  const lineSVG=(a,b,draw,x2,y2)=>{ const X2=x2??XR, Y2=y2??yOf(b); const len=Math.hypot(X2-XL,Y2-yOf(a)).toFixed(1); return `<line x1="${XL}" y1="${yOf(a)}" x2="${X2}" y2="${Y2}" ${draw?`class="draw" style="--len:${len};stroke-dasharray:${len}"`:''}/>`; };
+  const drawM=(fresh)=>{
+    svg.innerHTML = Object.entries(links).map(([a,b])=>lineSVG(+a,b,+a===fresh)).join('') + (ghost?lineSVG(ghost.a,0,false,ghost.x,ghost.y):'');
+    Ls.forEach((n,k)=>{ n.classList.toggle('on', k in links); n.classList.toggle('act', active===k); });
+    const used=Object.values(links); Rs.forEach((n,k)=>n.classList.toggle('on', used.includes(k)));
+    const all=Object.keys(links).length===4; cap.classList.toggle('ok',all); cap.textContent= all?'All matched. Nice work!':'Match answers with a line';
+  };
+  const link=(a,b)=>{ for(const k in links) if(links[k]===b) delete links[k]; links[a]=b; active=null; ghost=null; drawM(a); };
+  const demo=()=>{ links={}; active=null; ghost=null; drawM();
+    later(()=>link(1,2),450); later(()=>link(2,1),850); later(()=>link(3,0),1250);
+    later(()=>{ active=0; ghost={a:0,x:142,y:65.5}; drawM(); },1700); };
+  const scaleOf=()=>mopts.getBoundingClientRect().width/295;
+  const local=e=>{ const r=mopts.getBoundingClientRect(), s=scaleOf(); return {x:(e.clientX-r.left)/s, y:(e.clientY-r.top)/s}; };
+  Ls.forEach((n,k)=>n.addEventListener('pointerdown',e=>{ e.stopPropagation(); clearT(); if(k in links) delete links[k]; active=k; ghost=null; drawM(); dragLine={a:k,moved:false}; n.setPointerCapture?.(e.pointerId); }));
+  Ls.forEach(n=>n.addEventListener('pointermove',e=>{ if(!dragLine) return; const p=local(e); dragLine.moved=true; ghost={a:dragLine.a,x:p.x,y:p.y}; drawM(); }));
+  Ls.forEach(n=>n.addEventListener('pointerup',e=>{ e.stopPropagation(); if(!dragLine) return; const d=dragLine; dragLine=null; if(!d.moved){ ghost=null; drawM(); return; }
+    const p=local(e); const k=Math.round((p.y-20)/52); if(p.x>150 && k>=0 && k<4) link(d.a,k); else { ghost=null; drawM(); } }));
+  Rs.forEach((n,k)=>n.addEventListener('pointerup',e=>e.stopPropagation()));
+  Rs.forEach((n,k)=>n.addEventListener('click',e=>{ e.stopPropagation(); clearT(); if(active!==null) link(active,k); else { const a=Object.keys(links).find(x=>links[x]===k); if(a!==undefined){ delete links[a]; active=+a; drawM(); } } }));
+  [...Ls,...Rs].forEach(n=>n.addEventListener('pointerdown',e=>e.stopPropagation()));
+
+  /* 10 · the highlight walks the study path, then rests on Exams */
+  const pcs=[...el.querySelectorAll('.pc')], plinks=[...el.querySelectorAll('.plink')];
+  const hl=(k)=>{ pcs.forEach((c,j)=>c.classList.toggle('hl',j===k)); plinks.forEach((l,j)=>l.classList.toggle('f', j<k && j===k-1)); };
+  const walk=()=>{ hl(-1); [0,1,2,3].forEach(k=>later(()=>hl(k), 550+k*420)); later(()=>plinks.forEach(l=>l.classList.remove('f')), 550+3*420+500); };
+  pcs.forEach((c,k)=>c.addEventListener('click',()=>{ clearT(); hl(k); later(()=>plinks.forEach(l=>l.classList.remove('f')),500); }));
+
+  /* 11 · score ring fills to 100% */
+  const ring=el.querySelector('[data-ring]'), pct=el.querySelector('[data-pct]');
+  const fill=()=>{ ring.style.transition='none'; ring.style.strokeDashoffset=515.2; pct.textContent='0%'; ring.getBoundingClientRect();
+    later(()=>{ ring.style.transition='stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1)'; ring.style.strokeDashoffset=0; const t0=performance.now(); const f=t=>{ if(!el.isConnected) return; const p=Math.min(1,(t-t0)/1100); pct.textContent=Math.round(100*(p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2))+'%'; if(p<1) requestAnimationFrame(f);}; requestAnimationFrame(f); }, 350); };
+
+  const set=(n)=>{
+    n=Math.max(0,Math.min(3,n)); const changed=n!==i||!set.done; i=n; set.done=true;
+    track.style.transform=`translateX(${-375*i}px)`;
+    if(!changed) return;
+    clearT();
+    slides.forEach((s,k)=>{ s.classList.remove('active'); if(k===i){ s.offsetWidth; s.classList.add('active'); } });
+    if(i===0) countUp();
+    if(i===1) demo();
+    if(i===2) walk();
+    if(i===3) fill();
+  };
+  set(0); startDeck();
+  bind(el,'[data-next]',()=>set(i+1));
+  bind(el,'[data-prev]',()=>set(i-1));
+  bind(el,'[data-skip]',()=>set(3));
+  bind(el,'[data-start]',()=>go('signup',{},'fade'));
+  bind(el,'[data-have]',()=>go('signin',{},'fade'));
+  let sx=null; track.addEventListener('pointerdown',e=>{sx=e.clientX;});
+  track.addEventListener('pointerup',e=>{ if(sx===null) return; const dx=e.clientX-sx; sx=null; if(dx<-50) set(i+1); else if(dx>50) set(i-1); });
+};
+
+const SOC = `<div style="display:flex;gap:12px;margin-bottom:auto"><button class="soc" data-soc><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Google</button><button class="soc" data-soc>${ic('f-apple-logo','s20')}Apple</button></div>`;
+R.signin = (el, p) => {
+  el.innerHTML = `${statusBar()}
+   <div class="si-top" style="margin-top:-54px;height:230px"><div class="glow" style="top:20px"></div><img src="${A}logo-white.svg" width="74" height="60" alt="Muthabr" style="position:relative;margin-top:20px"></div>
+   <div class="si-card">
+     <div style="text-align:center"><div class="h28">Sign In</div><div class="b14 mut" style="margin-top:4px">Don’t have an account? <button class="link" data-up>Sign Up</button></div></div>
+     <form data-form novalidate style="display:flex;flex-direction:column;gap:16px;margin-top:40px">
+       <div class="field"><label for="si-email">Email</label><div class="inp" data-e><input id="si-email" type="email" placeholder="Enter your email" autocomplete="off" value="${p.email||''}"></div></div>
+       <div class="field"><label for="si-pass">Password</label><div class="inp" data-p><input id="si-pass" type="password" placeholder="Enter your password" value="${p.pass||''}"><button type="button" class="icbtn" style="width:28px;height:28px" data-eye aria-label="Show password">${ic('r-eye-slash','s20')}</button></div></div>
+       <div data-err class="errmsg" hidden></div>
+       <div style="display:flex;justify-content:space-between;align-items:center"><button type="button" style="display:flex;gap:8px;align-items:center" data-rem><span class="cb ${S.remember?'on':''}">${ic('r-check','s16')}</span>Remember Me</button><button type="button" class="link" data-forgot>Forgot</button></div>
+       <button class="btn primary" type="submit" style="margin-top:4px">Sign In</button>
+     </form>
+     <div class="b14 mut" style="text-align:center;margin:24px 0 20px">or</div>
+     ${SOC}
+   ${homeInd()}</div>`;
+  el.querySelector('.si-card').style.marginTop='-54px';
+  const e=el.querySelector('#si-email'), pw=el.querySelector('#si-pass'), err=el.querySelector('[data-err]');
+  bind(el,'[data-eye]',(b)=>{ const show=pw.type==='password'; pw.type=show?'text':'password'; b.innerHTML=ic(show?'r-eye':'r-eye-slash','s20'); });
+  bind(el,'[data-rem]',(b)=>{ S.remember=!S.remember; b.querySelector('.cb').classList.toggle('on',S.remember); });
+  const fill=()=>{ e.value='tyler.wilson@school.om'; pw.value='••••••••'; };
+  bind(el,'[data-forgot]',()=>toast('Reset link sent to your email'));
+  bind(el,'[data-up]',()=>go('signup',{},'fade'));
+  bind(el,'[data-soc]',()=>enterApp());
+  el.querySelector('[data-form]').addEventListener('submit', ev=>{ ev.preventDefault();
+    const okE=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e.value), okP=pw.value.length>=4;
+    el.querySelector('[data-e]').classList.toggle('err',!okE); el.querySelector('[data-p]').classList.toggle('err',!okP);
+    if(!okE||!okP){ err.hidden=false; err.textContent = !e.value&&!pw.value ? 'Enter your email and password to sign in.' : (!okE?'Enter a valid email address, like name@school.om.':'Your password needs at least 4 characters.'); return; }
+    enterApp();
+  });
+};
+function enterApp(){ S.tab='syllabus'; go('home',{},'up'); }
+const rings = (cy, sizes=[560,420,290,170]) => sizes.map(s=>`<i class="rg" style="width:${s}px;height:${s}px;top:${cy}px"></i>`).join('');
+R.signup = (el, p) => {
+  el.innerHTML = `${statusBar()}
+   <div class="asheet" style="overflow-y:auto">
+     <div class="pad" style="align-items:stretch">
+       <img src="${A}logo.svg" width="120" height="97" alt="Muthabr" style="align-self:center;margin-top:58px;animation:logoIn .7s cubic-bezier(.22,.8,.24,1.3) both">
+       <div class="su-title" style="margin-top:38px"><div class="h28">Create Account</div><div class="b14 mut" style="margin-top:4px">Already have an account? <button class="link" data-in>Sign In</button></div></div>
+       <form data-form novalidate style="display:flex;flex-direction:column;gap:16px;margin-top:40px">
+         <div class="field"><label for="su-email">Email</label><div class="inp" data-e><input id="su-email" type="email" placeholder="Enter your email" autocomplete="off" value="${p.email||''}"></div></div>
+         <div class="field"><label for="su-pass">Password</label><div class="inp" data-p><input id="su-pass" type="password" placeholder="Enter your password"><button type="button" class="icbtn" style="width:28px;height:28px" data-eye aria-label="Show password">${ic('r-eye-slash','s20')}</button></div></div>
+         <div data-err class="errmsg" hidden></div>
+         <button type="button" style="display:flex;gap:8px;align-items:center;align-self:flex-start;margin-top:4px" data-rem><span class="cb ${S.remember?'on':''}">${ic('r-check','s16')}</span>Remember Me</button>
+         <button class="btn primary" type="submit" style="margin-top:4px">Sign Up</button>
+       </form>
+       <div class="b14 mut" style="text-align:center;margin:24px 0 20px">or</div>
+       ${SOC}
+     </div>
+   </div>${homeInd()}`;
+  el.querySelector('.home-ind').style.background='#fff';
+  const e=el.querySelector('#su-email'), pw=el.querySelector('#su-pass'), err=el.querySelector('[data-err]');
+  bind(el,'[data-eye]',(b)=>{ const show=pw.type==='password'; pw.type=show?'text':'password'; b.innerHTML=ic(show?'r-eye':'r-eye-slash','s20'); });
+  bind(el,'[data-rem]',(b)=>{ S.remember=!S.remember; b.querySelector('.cb').classList.toggle('on',S.remember); });
+  bind(el,'[data-in]',()=>go('signin',{},'fade'));
+  bind(el,'[data-soc]',()=>go('phone',{email:'you@gmail.com'}));
+  el.querySelector('[data-form]').addEventListener('submit', ev=>{ ev.preventDefault();
+    const okE=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e.value), okP=pw.value.length>=6;
+    el.querySelector('[data-e]').classList.toggle('err',!okE); el.querySelector('[data-p]').classList.toggle('err',!okP);
+    if(!okE||!okP){ err.hidden=false; err.textContent = !okE ? 'Enter a valid email address, like name@school.om.' : 'Use at least 6 characters for your password.'; return; }
+    S.signupEmail=e.value; go('phone',{email:e.value});
+  });
+};
+
+R.phone = (el, p) => {
+  el.innerHTML = `${statusBar()}
+   <div class="atop" style="height:374px">${rings(214)}<img src="${A}logo-white.svg" width="74" height="60" alt="Muthabr" style="margin-top:-54px"></div>
+   <div class="asheet" style="margin-top:-54px"><div class="pad">
+     <div class="su-title" style="margin-top:40px"><div class="h28">Phone verification</div><div class="b14 mut" style="margin-top:4px">You’ll get a verification code by SMS</div></div>
+     <form data-form novalidate style="display:flex;flex-direction:column;gap:24px;margin-top:40px">
+       <div class="field"><label for="ph">Phone</label><div class="inp" data-ph><span class="flagbox"><img src="${A}flag-om.svg" width="20" height="15" alt="Oman"></span><span class="cc">+968</span><input id="ph" inputmode="numeric" placeholder="XXXX-XXXX" autocomplete="off" value="${S.phone||''}"></div><div data-err class="errmsg" hidden></div></div>
+       <button class="btn primary" type="submit">Continue</button>
+     </form>
+   </div></div>${homeInd()}`;
+  el.querySelector('.home-ind').style.background='#fff';
+  const ph=el.querySelector('#ph'), err=el.querySelector('[data-err]');
+  ph.addEventListener('input',()=>{ const d=ph.value.replace(/\D/g,'').slice(0,8); ph.value=d.length>4?d.slice(0,4)+'-'+d.slice(4):d; el.querySelector('[data-ph]').classList.remove('err'); err.hidden=true; });
+  el.querySelector('[data-form]').addEventListener('submit', ev=>{ ev.preventDefault();
+    if(ph.value.replace(/\D/g,'').length!==8){ el.querySelector('[data-ph]').classList.add('err'); err.hidden=false; err.textContent='Enter your 8-digit Oman mobile number, like 9123-4567.'; return; }
+    S.phone=ph.value; go('code',{phone:ph.value});
+  });
+  setTimeout(()=>{ if(el.isConnected && !ph.value) ph.focus({preventScroll:true}); }, 500);
+};
+
+R.code = (el, p) => {
+  const phone = p.phone || S.phone || '9123-4567';
+  const CODE = '482915';
+  el.innerHTML = `${statusBar()}
+   <div class="atop" style="height:204px">${rings(94,[480,340,220,130])}<img src="${A}logo-white.svg" width="74" height="60" alt="Muthabr" style="margin-top:-24px"></div>
+   <div class="asheet" style="margin-top:-54px"><div class="pad" style="align-items:center">
+     <img src="${A}envelope.png" width="150" height="136" alt="" style="margin-top:40px;animation:logoIn .7s cubic-bezier(.22,.8,.24,1.3) .1s both">
+     <div class="su-title" style="margin-top:18px"><div class="h28">Code Sent</div><div class="b14 mut" style="margin-top:4px;max-width:250px">Please enter the code we’ve sent to +968 ${esc(phone)}</div></div>
+     <div class="b14" style="margin-top:40px;height:20px" data-timer></div>
+     <div class="otp" style="margin-top:8px" data-otp>${'<span class="bx"></span>'.repeat(6)}<input data-in inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="Verification code"></div>
+     <button class="btn primary" style="margin-top:24px" data-verify>Verify</button>
+     <div class="b14 mut" style="margin-top:34px">Wrong phone number? <button class="link" data-change>Change</button></div>
+   </div></div>${homeInd()}`;
+  el.querySelector('.home-ind').style.background='#fff';
+  const inp=el.querySelector('[data-in]'), otp=el.querySelector('[data-otp]'), bxs=[...otp.querySelectorAll('.bx')], timer=el.querySelector('[data-timer]');
+  let left=120, tick=null, ct=null;
+  const paint=()=>{ const v=inp.value; bxs.forEach((b,k)=>{ const ch=v[k]||''; if(b.textContent!==ch){ b.textContent=ch; if(ch){ b.classList.remove('fill'); b.offsetWidth; b.classList.add('fill'); } } b.classList.toggle('cur', document.activeElement===inp && k===Math.min(v.length,5)); }); };
+  const showTimer=()=>{ if(left>0){ timer.innerHTML=`Time remaining to resend code: <span style="color:var(--red-500)">${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}</span>`; } else { timer.innerHTML=`<button class="link" data-resend>Resend code</button>`; bind(timer,'[data-resend]',resend); } };
+  const startTimer=()=>{ clearInterval(tick); left=120; showTimer(); tick=setInterval(()=>{ if(!el.isConnected){clearInterval(tick);return;} left--; showTimer(); if(left<=0) clearInterval(tick); },1000); };
+  const sms=()=>{ el.querySelector('.sms')?.remove(); const n=document.createElement('button'); n.className='sms'; n.innerHTML=`<span class="ap">${ic('r-chat-circle','s20','#fff')}</span><span style="flex:1;min-width:0"><b>Muthabr</b><p>Your Muthabr verification code is ${CODE.slice(0,3)} ${CODE.slice(3)}. Tap to fill in.</p></span><small>now</small>`;
+    n.addEventListener('click',()=>{ inp.value=CODE; inp.dispatchEvent(new Event('input')); n.classList.add('bye'); setTimeout(()=>n.remove(),300); });
+    el.appendChild(n); setTimeout(()=>{ if(n.isConnected){ n.classList.add('bye'); setTimeout(()=>n.remove(),300);} }, 12000); };
+  const clearErr=()=>{ otp.classList.remove('bad'); el.querySelector('.ctoast')?.remove(); };
+  const resend=()=>{ clearErr(); inp.value=''; paint(); startTimer(); setTimeout(sms,900); inp.focus({preventScroll:true}); };
+  const verify=()=>{
+    const v=inp.value;
+    if(v.length<6){ otp.classList.remove('shake'); otp.offsetWidth; otp.classList.add('shake'); inp.focus({preventScroll:true}); return; }
+    if(v!==CODE){
+      otp.classList.add('bad'); otp.classList.remove('shake'); otp.offsetWidth; otp.classList.add('shake');
+      clearInterval(tick); left=0; showTimer();
+      el.querySelector('.ctoast')?.remove(); const t=document.createElement('div'); t.className='ctoast'; t.innerHTML=`<span>Not a valid code, try again or resend it</span><button class="icbtn" style="width:32px;height:32px" aria-label="Dismiss">${ic('r-x','s20')}</button>`;
+      t.querySelector('button').addEventListener('click',()=>t.remove()); el.appendChild(t); return;
+    }
+    otp.classList.add('good'); clearInterval(tick); setTimeout(()=>go('hooray',{email:p.email||S.signupEmail},'fade'), 550);
+  };
+  inp.addEventListener('input',()=>{ inp.value=inp.value.replace(/\D/g,'').slice(0,6); if(otp.classList.contains('bad')) clearErr(); paint(); if(inp.value.length===6) setTimeout(verify,250); });
+  inp.addEventListener('focus',paint); inp.addEventListener('blur',paint);
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter') verify(); });
+  bind(el,'[data-verify]',verify);
+  bind(el,'[data-change]',()=>back());
+  startTimer(); paint();
+  setTimeout(()=>{ if(el.isConnected){ inp.focus({preventScroll:true}); paint(); } }, 450);
+  setTimeout(()=>{ if(el.isConnected) sms(); }, 1400);
+};
+
+R.hooray = (el, p) => {
+  el.innerHTML = `${statusBar()}
+   <div class="asheet"><div class="pad" style="flex:1;align-items:center">
+     <img src="${A}party.png" width="150" height="126" alt="" style="margin-top:220px;animation:logoIn .8s cubic-bezier(.22,.8,.24,1.4) both">
+     <div style="font-size:24px;line-height:32px;font-weight:600;margin-top:36px;animation:upIn .5s cubic-bezier(.22,.8,.24,1) .2s both">Hooray!</div>
+     <div class="b14 mut" style="margin-top:8px;animation:upIn .5s cubic-bezier(.22,.8,.24,1) .3s both">Your account created successfully</div>
+     <button class="btn primary" style="margin-top:auto" data-in>Sign In</button>
+   </div></div>${homeInd()}`;
+  el.querySelector('.home-ind').style.background='#fff';
+  setTimeout(()=>{ if(el.isConnected) confetti(80); }, 250);
+  bind(el,'[data-in]',()=>go('signin',{email:p.email||S.signupEmail||''},'fade'));
+};
+
+/* tab bar */
+const coverImg = (b, small) => b.cover ? `<img src="${A+b.cover}" alt="${esc(b.title)} cover">` : `<div class="mathcover ${small?'sm':''}" role="img" aria-label="Basic Math cover"><span class="mc-g">Grade 10</span><span class="mc-t">Basic<br>Math</span><span class="mc-f">a² + b² = c²</span><svg class="mc-s" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="14"/><path d="M20 100 L60 20 L100 100 Z" fill="none" stroke="#FBC02D" stroke-width="4"/></svg></div>`;
+const tabBar = (fill) => `<div class="tabbar ${fill?'fill':''}"><div class="items">${[['syllabus','book','Syllabus'],['friends','users','Friends'],['bookmarks','bookmark-simple','Bookmarks'],['settings','gear','Settings']].map(([k,i,l])=>`<button data-tab="${k}" class="${S.tab===k?'on':''}">${ic((S.tab===k?'f-':'r-')+i)}<span>${l}</span></button>`).join('')}</div>${homeInd()}</div>`;
+function wireTabs(el){ bind(el,'[data-tab]',(b)=>{ const t=b.dataset.tab; if(t==='friends') return go('friends'); if(t===S.tab) return; S.tab=t; go(t==='syllabus'?'home':t,{},'fade'); }); }
+
+R.home = (el) => {
+  const books = S.seg==='dl' ? BOOKS.filter(b=>b.dl) : BOOKS;
+  const pct = b => Math.round(b.done/b.total*100);
+  const prog = b => `<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between" class="b12 mut"><span>${b.done}/${b.total} completed</span><span>${pct(b)}%</span></div><div class="progress"><i style="width:0" data-w="${pct(b)}"></i></div></div>`;
+  const dl = b => b.dl ? ic('f-arrow-circle-down','s16','#82B536') : ic('r-arrow-circle-down','s16','#333');
+  el.innerHTML = `${statusBar()}
+   <div class="hero">
+     <div class="card12" style="display:flex;justify-content:space-between;align-items:center;padding:16px">
+       <div style="display:flex;gap:12px;align-items:center">${avatar('av-tyler.png','g-green',40)}<div><div class="t16">Tyler Wilson</div><div class="b12 mut">10 Grade</div></div></div>
+       <div style="display:flex"><button class="icbtn" data-bell aria-label="Notifications"><img src="${A}bell.svg" width="20" height="20" alt=""></button><button class="icbtn" data-switch aria-label="Switch user">${ic('r-caret-up-down','s20')}</button></div>
+     </div>
+     <div class="card12" style="display:flex;align-items:center">
+       <div style="flex:1;display:flex;gap:12px;align-items:center;padding:16px"><span style="width:32px;display:flex;justify-content:center">${star(26)}</span><div><div class="b12 mut">Score</div><div class="l14">3 200</div></div></div>
+       <i style="width:1px;height:32px;background:var(--outline)"></i>
+       <div style="flex:1;display:flex;gap:12px;align-items:center;padding:16px"><img src="${A}rank-purple.png" width="28" height="32" alt=""><div><div class="b12 mut">Rank</div><div class="l14">Legend</div></div></div>
+     </div>
+   </div>
+   <div class="sheet">
+     <div style="display:flex;gap:12px;padding:16px 16px 12px;position:relative;flex:none">
+       <button class="icbtn bordered" data-view aria-label="Change layout">${ic(S.view==='grid'?'r-rows':'r-squares-four','s20')}</button>
+       <button class="inp" data-sem style="flex:1;border-radius:10px;justify-content:space-between;padding:0 12px 0 16px;${S.ddOpen?'border-color:var(--primary)':''}"><span class="b14">${S.sem}</span>${ic(S.ddOpen?'r-caret-up':'r-caret-down','s20')}</button>
+       <button class="icbtn bordered" data-sort aria-label="Sort">${ic('r-sort-ascending','s20')}</button>
+       ${S.ddOpen?`<div class="dd">${['First Semester','Second Semester','Third Semester','Fourth Semester'].map(s=>`<button data-pick="${s}" class="${s===S.sem?'on':''}">${s}${s===S.sem?ic('r-check','s20'):''}</button>`).join('')}</div>`:''}
+     </div>
+     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px 16px;flex:none">
+       <div class="seg" data-segc><span class="pill"></span><button data-seg="all" class="${S.seg==='all'?'on':''}">All <span class="badge">${BOOKS.length}</span></button><button data-seg="dl" class="${S.seg==='dl'?'on':''}">Downloaded <span class="badge">${BOOKS.filter(b=>b.dl).length}</span></button></div>
+       <span class="count"><b>0</b>/6 completed</span>
+     </div>
+     <div class="scroll">
+       ${S.view==='grid'
+         ? `<div class="grid">${books.map(b=>`<button class="bcard" data-book="${b.id}"><div class="cover">${coverImg(b)}</div><div style="display:flex;flex-direction:column;gap:8px;width:100%"><div style="display:flex;gap:4px;align-items:center">${dl(b)}<span class="l12" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(b.title)}</span></div>${prog(b)}</div></button>`).join('')}</div>`
+         : `<div style="padding-bottom:16px">${books.map(b=>`<button class="brow pressable" data-book="${b.id}"><span class="thumb">${coverImg(b,true)}</span><div style="flex:1;display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:4px;align-items:center">${dl(b)}<span class="l12">${esc(b.title)}</span></div>${prog(b)}</div></button>`).join('')}</div>`}
+     </div>
+   </div>${tabBar(true)}`;
+  wireTabs(el);
+  // segmented pill position
+  const segc=el.querySelector('[data-segc]'); const placePill=()=>{ const on=segc.querySelector('button.on'); const pill=segc.querySelector('.pill'); pill.style.left=on.offsetLeft+'px'; pill.style.width=on.offsetWidth+'px'; };
+  requestAnimationFrame(placePill);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.querySelectorAll('[data-w]').forEach(n=>n.style.width=n.dataset.w+'%')));
+  bind(el,'[data-view]',()=>{ S.view=S.view==='grid'?'rows':'grid'; rerender(); });
+  bind(el,'[data-seg]',(b)=>{ S.seg=b.dataset.seg; rerender(); });
+  bind(el,'[data-sem]',()=>{ S.ddOpen=!S.ddOpen; rerender(); });
+  bind(el,'[data-pick]',(b)=>{ S.sem=b.dataset.pick; S.ddOpen=false; rerender(); });
+  bind(el,'[data-sort]',()=>{ BOOKS.reverse(); rerender(); toast('Sorted by most recent'); });
+  bind(el,'[data-bell]',()=>toast('You have 2 new friend requests','check-circle'));
+  bind(el,'[data-switch]',()=>{ const bs=overlay(`<div class="bs-head"><div class="t16">Switch user</div><button class="icbtn x" data-x>${ic('r-x')}</button></div><div style="padding:8px 16px 0">${[['Tyler Wilson','10 Grade','av-tyler.png','g-green',1],['Fatima Wilson','7 Grade','av-lisa.png','g-purple',0]].map(([n,g,a,c,on])=>`<button class="row" data-u style="border-top:0">${avatar(a,c,40)}<div class="grow"><div class="l14">${n}</div><div class="b12 mut">${g}</div></div>${on?doneIcon():'<span class="check todo"></span>'}</button>`).join('')}</div>${homeInd()}`); bind(bs,'[data-x],[data-u]',()=>closeOverlay()); });
+  bind(el,'[data-book]',(b)=>{ useBook(BOOKS.find(x=>x.id===b.dataset.book)); S.topicOpen=2; S.ddOpen=false; go('units'); });
+};
+
+R.units = (el) => {
+  const b=S.book;
+  el.innerHTML = `${statusBar()}${navBar({title:b.title, right:'arrow-circle-down', onPurple:true})}
+   <div style="padding:0 16px;flex:none"><div class="search" style="border:0"><span style="color:var(--on2)">${ic('r-magnifying-glass','s20')}</span><input id="unit-search" placeholder="Search for topics or units" aria-label="Search units"></div></div>
+   <div class="l14" style="color:#fff;padding:24px 16px 8px">Units</div>
+   <div class="scroll" style="padding:0 16px"><div class="group" data-list style="border:0"></div></div>
+   <div class="ktest onp"><div><div class="t16">Take a Knowledge Test</div><div class="b14 mut" style="margin-top:4px">Review your semester’s knowledge</div></div><button class="btn primary" data-exam>Semester Exam</button></div>${homeInd(true)}`;
+  wireBack(el);
+  const list=el.querySelector('[data-list]');
+  const draw=(q='')=>{ const us=b.units.filter(([u])=>u.toLowerCase().includes(q.toLowerCase()));
+    list.innerHTML = us.length? us.map(([u,n])=>`<button class="row" data-unit="${esc(u)}"><span class="grow b14">${esc(u)}</span><span class="b14 mut">${n} topics</span>${ic('r-caret-right','s20','#666')}</button>`).join('') : `<div class="b14 mut" style="padding:16px">No units match “${esc(q)}”.</div>`;
+    bind(list,'[data-unit]',(n)=>{ S.unit=n.dataset.unit; go('topics'); }); };
+  draw();
+  el.querySelector('#unit-search').addEventListener('input', e=>draw(e.target.value));
+  bind(el,'[data-act="right"]',()=>toast('Book saved for offline use'));
+  bind(el,'[data-exam]',()=>startSheet('exam'));
+};
+
+R.topics = (el) => {
+  el.innerHTML = `${statusBar()}<div class="sheet">${navBar({title:S.unit, right:'dots-three'})}
+    <div class="scroll"><div class="sec-head"><span class="t16">Topics</span><span class="count"><b>2</b>/6 completed</span></div>
+    <div style="padding:0 16px"><div class="group" data-list>
+      ${TOPICS.map((t,k)=>`<div class="${S.topicOpen===k?'open':''}" style="${k?'border-top:1px solid var(--outline)':''}"><button class="row" data-topic="${k}" style="border:0">${`<span class="caret">${ic('r-caret-right','s20','#333')}</span>`}<span class="grow b14">${t.t}</span>${t.s==='done'?doneIcon():ringIcon(.3)}</button>
+        ${S.topicOpen===k?`<div class="tiles"><button class="tile sum" data-go="summary">${ic('r-book-open-text','s20')}Summary</button><button class="tile fr" data-go="fastreview">${ic('r-shooting-star','s20')}Fast Review</button><button class="tile ex" data-go="exercises">${ic('r-note-pencil','s20')}Exercises</button></div>`:''}</div>`).join('')}
+    </div></div></div>
+    <div class="ktest" style="margin-top:12px"><div><div class="t16">Take a Knowledge Test</div><div class="b14 mut" style="margin-top:4px">Review your topic’s knowledge</div></div><button class="btn primary" data-exam>Unit’s Exam</button></div>${homeInd()}</div>`;
+  wireBack(el);
+  bind(el,'[data-topic]',(b)=>{ const k=+b.dataset.topic; S.topicOpen = S.topicOpen===k?-1:k; rerender(); });
+  bind(el,'[data-go]',(b)=>{ S.topic=TOPICS[S.topicOpen]?.t||'Adding more Numbers'; go(b.dataset.go); });
+  bind(el,'[data-exam]',()=>startSheet('exam'));
+  bind(el,'[data-act="right"]',()=>toast('Topic added to your study path'));
+};
+
+const topicName = () => S.topic||TOPICS[2].t;
+
+R.summary = (el) => {
+  const read=S.summariesRead;
+  el.innerHTML = `${statusBar()}<div class="sheet">${navBar({title:topicName(), sub:'Summary', dot:'#532EC9', right:'list-bullets'})}
+   <div style="padding:16px 16px 0;flex:none"><div class="search"><span style="color:var(--on2)">${ic('r-magnifying-glass','s20')}</span><input id="sum-search" placeholder="Search for summaries…" aria-label="Search summaries"></div></div>
+   <div class="sec-head" style="padding-top:20px"><span class="t16">Summaries</span><span class="count"><b>${read.filter(Boolean).length}</b>/5 read</span></div>
+   <div class="scroll" style="padding:0 16px"><div class="group" data-list></div></div>${homeInd()}</div>`;
+  wireBack(el);
+  const list=el.querySelector('[data-list]');
+  const draw=(q='')=>{ list.innerHTML=LESSONS.map((l,k)=>[l,k]).filter(([l])=>l.toLowerCase().includes(q.toLowerCase())).map(([l,k])=>`<button class="row" data-s="${k}" style="align-items:flex-start;padding:12px 16px">${read[k]?doneIcon():'<span class="check todo"></span>'}<span class="grow b14">${l}</span>${ic('r-caret-right','s20','#666')}</button>`).join('');
+    bind(list,'[data-s]',(b)=>{ S.summariesRead[+b.dataset.s]=true; go('pdf',{k:+b.dataset.s}); }); };
+  draw(); el.querySelector('#sum-search').addEventListener('input',e=>draw(e.target.value));
+  bind(el,'[data-act="right"]',()=>toast('Select summaries to bookmark'));
+};
+
+R.pdf = (el, p) => {
+  el.classList.add('white');
+  el.innerHTML = `${statusBar()}<div class="sheet" style="border-radius:18px 18px 0 0">${navBar({title:LESSONS[p.k||0], right:S.bookmarked?'bookmarks-simple':'bookmark-simple'})}
+    <div class="pdf"><img src="${A}summary-page.jpg" alt="Summary page: Forces unit infographic"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 16px 0;background:linear-gradient(transparent,#fff 30%)"><button class="btn primary" data-fr>Fast Review</button>${homeInd()}</div></div>`;
+  el.style.background='var(--primary)';
+  wireBack(el);
+  const bm=el.querySelector('[data-act="right"]'); if(S.bookmarked) bm.innerHTML=`<svg class="ic" viewBox="0 0 256 256" fill="#532EC9">${window.ICONS['f-bookmark-simple']}</svg>`;
+  bind(el,'[data-act="right"]',()=>{ S.bookmarked=!S.bookmarked; rerender(); toast(S.bookmarked?'Saved to Bookmark Group #1':'Removed from bookmarks'); });
+  bind(el,'[data-fr]',()=>go('fastreview'));
+};
+
+R.fastreview = (el) => {
+  const done=[false,true,true,true,true];
+  el.innerHTML = `${statusBar()}<div class="sheet">${navBar({title:topicName(), sub:'Flashcards', dot:'#F15B50', right:'list-bullets'})}
+   <div class="sec-head"><span class="t16">Items</span><span class="count"><b>4</b>/5 completed</span></div>
+   <div class="scroll" style="padding:0 16px"><div class="group">${LESSONS.map((l,k)=>`<button class="row" data-f="${k}" style="align-items:flex-start">${done[k]?doneIcon():'<span class="check todo"></span>'}<span class="grow b14">${l}</span>${ic('r-caret-right','s20','#666')}</button>`).join('')}</div></div>${homeInd()}</div>`;
+  wireBack(el);
+  bind(el,'[data-f]',(b)=>startSheet('flash', +b.dataset.f));
+};
+
+R.exercises = (el) => {
+  el.innerHTML = `${statusBar()}<div class="sheet">${navBar({title:topicName(), sub:'Exercises', dot:'#82B536', right:'list-bullets'})}
+   <div class="sec-head"><span class="t16">Exercises</span><span class="count"><b>${S.lastResult?1:0}</b>/5 completed</span></div>
+   <div class="scroll" style="padding:0 16px 16px"><div class="group">${LESSONS.map((l,k)=>{ let [r,t]=EX_SCORES[k]; if(k===0&&S.lastResult){r=S.lastResult.ok;t=QUIZ.length;} const pc=Math.round(r/t*100); return `<button class="row" data-x="${k}" style="flex-direction:column;align-items:stretch;gap:12px;padding:16px"><div style="display:flex;gap:12px"><span class="grow b14">${String(k+1).padStart(2,'0')}. ${l}</span>${ic('r-caret-right','s20','#666')}</div><div class="progress"><i style="width:0" data-w="${pc}"></i></div><div class="b12 mut" style="display:flex;justify-content:space-between"><span>${r}/${t} right answers</span><span>${pc}%</span></div></button>`; }).join('')}</div></div>${homeInd()}</div>`;
+  wireBack(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.querySelectorAll('[data-w]').forEach(n=>n.style.width=n.dataset.w+'%')));
+  bind(el,'[data-x]',(b)=>startSheet('quiz', +b.dataset.x));
+};
+
+/* start sheets (Fast review / Exercise / Exam) */
+function startSheet(kind, k=0){
+  const cfg = {
+    flash:{sub:'Fast Review', dot:'#F15B50', h:'Start your fast review', n:`${CARDS.length} flashcards`, lbl:'Score', val:`0/${CARDS.length*16}`, btn:'Start Fast Review', art:`<svg width="160" height="104" viewBox="0 0 160 104"><rect x="12" y="20" width="136" height="80" rx="6" fill="#FFD5D2"/><rect x="1" y="1" width="158" height="94" rx="4" fill="#fff" stroke="#F15B50"/><rect x="60" y="34" width="40" height="4" rx="2" fill="#F15B50"/><rect x="32" y="46" width="96" height="3" rx="1.5" fill="#FFD5D2"/><rect x="32" y="56" width="96" height="3" rx="1.5" fill="#FFD5D2"/></svg>`},
+    quiz:{sub:'Exercise', dot:'#82B536', h:'Are you ready to solve questions?', n:`${QUIZ.length} questions`, lbl:'Stars', val:'0/50', btn:'Start Exercise', art:`<svg width="160" height="104" viewBox="0 0 160 104"><rect x="1" y="1" width="158" height="102" rx="4" fill="#fff" stroke="#82B536"/><rect x="30" y="30" width="12" height="12" rx="3" fill="#82B536"/><path d="m33 36 2 2 4-4" stroke="#fff" stroke-width="1.6" fill="none"/><rect x="50" y="30" width="40" height="3" rx="1.5" fill="#82B536"/><rect x="50" y="40" width="80" height="3" rx="1.5" fill="#D3F1A7"/><rect x="30" y="60" width="12" height="12" rx="3" fill="#82B536"/><path d="m33 63 6 6m0-6-6 6" stroke="#fff" stroke-width="1.6"/><rect x="50" y="60" width="40" height="3" rx="1.5" fill="#82B536"/><rect x="50" y="70" width="80" height="3" rx="1.5" fill="#D3F1A7"/></svg>`},
+    exam:{sub:'Exam', dot:'#FBC02D', h:'Ready for the knowledge test?', n:`${QUIZ.length} questions · 10 minutes`, lbl:'Stars', val:'0/50', btn:'Start Exam', art:`<svg width="120" height="104" viewBox="0 0 120 104"><circle cx="60" cy="52" r="46" fill="#FFF7D9" stroke="#FBC02D" stroke-width="2"/><path d="M60 26l7.6 15.4 17 2.5-12.3 12 2.9 16.9L60 64.8l-15.2 8 2.9-16.9-12.3-12 17-2.5z" fill="#FBC02D"/></svg>`},
+  }[kind];
+  const title = kind==='exam' ? `${S.unit} · Unit Exam` : LESSONS[k];
+  const bs = overlay(`<div class="bs-head"><div style="min-width:0"><div class="l14" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(title)}</div><div class="b12" style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:2px"><i style="width:8px;height:8px;border-radius:50%;background:${cfg.dot}"></i>${cfg.sub}</div></div><button class="icbtn x" data-x aria-label="Close">${ic('r-x')}</button></div>
+    <div style="padding:40px 16px 0;display:flex;flex-direction:column;align-items:center;text-align:center">${cfg.art}<div class="t20" style="margin-top:28px">${cfg.h}</div><div class="b14 mut" style="margin-top:4px">${cfg.n}</div>
+    <div style="display:flex;gap:12px;align-items:center;margin-top:20px;text-align:left">${star(26)}<div><div class="b12 mut">${cfg.lbl}</div><div class="l14">${cfg.val}</div></div></div></div>
+    <div style="display:flex;gap:16px;padding:20px 16px 0"><button class="btn secondary sq" data-bm aria-label="Bookmark">${ic('r-bookmark-simple','s20')}</button><button class="btn primary" data-go>${cfg.btn}</button></div>${homeInd()}`);
+  bind(bs,'[data-x]',()=>closeOverlay());
+  bind(bs,'[data-bm]',(b)=>{ b.innerHTML=`<svg class="ic s20" viewBox="0 0 256 256" fill="#532EC9">${window.ICONS['f-bookmark-simple']}</svg>`; toast('Saved to bookmarks'); });
+  bind(bs,'[data-go]',()=>{ if(kind==='flash'){ S.flash={i:0, known:0, title:LESSONS[k]}; go('flash'); } else { newQuiz(kind==='exam'?'Unit Exam':LESSONS[k]); go('quiz'); } });
+}
+
+/* flashcards */
+R.flash = (el) => {
+  const F=S.flash;
+  if(F.i>=CARDS.length){ return R.flashDone(el); }
+  const c=CARDS[F.i];
+  el.innerHTML = `${statusBar()}${navBar({title:F.title, left:'x', right:'dots-three', onPurple:true})}
+   <div class="fc-area"><div class="fc-stack b"></div><div class="fc-stack"></div>
+     <div class="fc" data-card tabindex="0" aria-label="Flashcard. Tap to flip">
+       <div class="face"><div style="display:flex;justify-content:space-between" class="b14 mut"><span>${ic('r-text-aa','s20')}</span><span>${F.i+1} of ${CARDS.length}</span></div><div class="mid">${esc(c.q)}</div><div class="b14 mut" style="text-align:center">Tap to Reveal Answer</div></div>
+       <div class="face back"><div style="display:flex;justify-content:space-between" class="b14 mut"><span>${ic('r-text-aa','s20')}</span><span>${F.i+1} of ${CARDS.length}</span></div><div class="mid">${esc(c.a)}</div><div class="b14 mut" style="text-align:center">Tap to Reveal Question</div></div>
+       <span class="fc-stamp" data-yes style="left:24px;color:#6A9A23;border-color:#82B536;background:#EFFFD6;transform:rotate(-8deg)">I know it</span>
+       <span class="fc-stamp" data-no style="right:24px;color:#E2483D;border-color:#F15B50;background:#FFECEB;transform:rotate(8deg)">Still learning</span>
+     </div></div>
+   <div class="fc-bar"><button class="btn secondary sq" data-no-b aria-label="I don't know">${ic('r-x','s20')}</button><div class="b12 mut" style="flex:1;text-align:center">Swipe to right if you know the answer, or left if you don’t</div><button class="btn primary sq" data-yes-b aria-label="I know it">${ic('r-check','s20')}</button></div>
+   ${homeInd(true)}`;
+  bind(el,'[data-act="back"]',()=>quitDialog('fast review', ()=>back()));
+  bind(el,'[data-act="right"]',()=>moreSheet());
+  const card=el.querySelector('[data-card]'); const yes=el.querySelector('[data-yes]'), no=el.querySelector('[data-no]');
+  let flipped=false, sx=0, dx=0, drag=false, moved=false;
+  const flip=()=>{ flipped=!flipped; card.classList.toggle('flipped',flipped); };
+  const fling=(known)=>{ F.known+=known?1:0; card.style.transition='transform .4s ease-in, opacity .4s'; card.style.transform=`translateX(${known?480:-480}px) rotate(${known?24:-24}deg)${flipped?' rotateY(180deg)':''}`; card.style.opacity=0; setTimeout(()=>{ F.i++; rerender(); const nc=stack[stack.length-1].el.querySelector('[data-card]'); if(nc){ nc.animate([{transform:'scale(.92) translateY(24px)',opacity:.4},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.22,.8,.24,1)'});} }, 340); };
+  card.addEventListener('pointerdown',e=>{ drag=true; moved=false; sx=e.clientX; dx=0; card.style.transition='none'; card.setPointerCapture(e.pointerId); });
+  card.addEventListener('pointermove',e=>{ if(!drag) return; dx=e.clientX-sx; if(Math.abs(dx)>6) moved=true; card.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)${flipped?' rotateY(180deg)':''}`; yes.style.opacity=Math.max(0,Math.min(1,dx/90)); no.style.opacity=Math.max(0,Math.min(1,-dx/90)); });
+  card.addEventListener('pointerup',()=>{ if(!drag) return; drag=false; card.style.transition=''; if(dx>90) return fling(true); if(dx<-90) return fling(false); card.style.transform=''; yes.style.opacity=0; no.style.opacity=0; if(!moved) flip(); });
+  card.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){e.preventDefault();flip();} if(e.key==='ArrowRight') fling(true); if(e.key==='ArrowLeft') fling(false); });
+  bind(el,'[data-yes-b]',()=>{ yes.style.opacity=1; fling(true); });
+  bind(el,'[data-no-b]',()=>{ no.style.opacity=1; fling(false); });
+};
+R.flashDone = (el) => {
+  const F=S.flash, sc=F.known*16, ok=F.known>=Math.ceil(CARDS.length*.6);
+  el.innerHTML = `${statusBar()}${navBar({title:F.title, left:'x', right:'dots-three', onPurple:true})}
+   <div class="qcard" style="margin-bottom:16px;align-items:center;justify-content:center;text-align:center;padding:24px">
+     <img src="${A}party.png" width="180" height="152" alt="" style="animation:logoIn .7s cubic-bezier(.22,.8,.24,1.3) both">
+     <div class="h28" style="margin-top:24px">${ok?'Hooray!':'Keep going!'}</div>
+     <div class="b14 mut" style="margin-top:4px">You’ve learned ${F.known} of ${CARDS.length} cards</div>
+     <div style="display:flex;gap:12px;align-items:center;margin:20px 0 28px;text-align:left">${star(26)}<div><div class="b12 mut">Score</div><div class="l14" data-sc>0/${CARDS.length*16}</div></div></div>
+     <button class="btn primary" data-back>Back to Reviews</button>
+     <button class="link" data-again style="margin-top:20px">Review again</button>
+   </div>${homeInd(true)}`;
+  bind(el,'[data-act="back"],[data-back]',()=>back());
+  bind(el,'[data-again]',()=>{ S.flash={i:0,known:0,title:F.title}; rerender(); });
+  const n=el.querySelector('[data-sc]'); const t0=performance.now(); const f=t=>{const p=Math.min(1,(t-t0)/900); n.textContent=Math.round(sc*p)+'/'+CARDS.length*16; if(p<1) requestAnimationFrame(f);}; requestAnimationFrame(f);
+  if(ok) setTimeout(()=>confetti(),150);
+};
+
+function quitDialog(what, onQuit){
+  const bs=overlay(`<div class="bs-head" style="border-bottom:1px solid var(--outline)"><div class="t16">Close ${what==='exercise'?'Exercise':'Fast Review'}</div><button class="icbtn x" data-x aria-label="Keep going">${ic('r-x')}</button></div>
+    <div class="b14" style="padding:20px 24px">Are you sure you want to close ${what}? You have not completed the current one. Any unsaved progress will be lost.</div>
+    <div style="display:flex;gap:12px;padding:0 24px 28px"><button class="btn secondary" data-close>Close</button><button class="btn primary" data-cont>Continue</button></div>`, {center:true});
+  bind(bs,'[data-x],[data-cont]',()=>closeOverlay());
+  bind(bs,'[data-close]',()=>{ closeOverlay(true); onQuit(); });
+}
+function moreSheet(){
+  const bs=overlay(`<div class="bs-head"><div class="t16">More actions</div><button class="icbtn x" data-x>${ic('r-x')}</button></div><div style="padding:8px 0">${[['r-bookmark-simple','Save to Bookmarks'],['r-share-network','Share with friends'],['r-warning-circle','Report a problem']].map(([i,l])=>`<button class="row" data-m style="border:0;padding:14px 24px">${ic(i,'s20')}<span class="b14">${l}</span></button>`).join('')}</div>${homeInd()}`);
+  bind(bs,'[data-x]',()=>closeOverlay()); bind(bs,'[data-m]',(b)=>{ closeOverlay(); toast(b.textContent.trim()==='Report a problem'?'Thanks, we’ll review this card':'Done'); });
+}
+
+/* quiz */
+function newQuiz(title){ S.quiz={title, i:0, ans:QUIZ.map(()=>({sel:null, sub:false})), streak:0}; }
+R.quiz = (el) => {
+  const Q=S.quiz, q=QUIZ[Q.i], a=Q.ans[Q.i];
+  const pillCls = k => { const x=Q.ans[k]; if(k===Q.i) return 'cur'; if(x.sub) return x.sel===QUIZ[k].a?'ok':'bad'; return ''; };
+  const optCls = k => { if(!a.sub) return a.sel===k?'sel':''; if(k===q.a) return 'right'; if(k===a.sel) return 'wrong'; return 'dim'; };
+  const okNow = a.sub && a.sel===q.a;
+  const isLast = Q.i===QUIZ.length-1;
+  el.innerHTML = `${statusBar()}${navBar({title:Q.title, left:'x', right:'dots-three', onPurple:true})}
+   <div class="qcard ${S.textBig?'big':''}">
+     <div class="qpills" data-pills>${QUIZ.map((_,k)=>`<button class="qp ${pillCls(k)}" data-q="${k}">${k+1}</button>`).join('')}</div>
+     <div class="qmeta"><button class="icbtn" data-aa aria-label="Text size" style="width:28px;height:28px;color:${S.textBig?'var(--primary)':'var(--on2)'}">${ic('r-text-aa','s20')}</button>
+       <span class="bolts">${[0,1,2].map(k=>ic(k<Math.min(3,Q.streak)?'f-lightning':'r-lightning','s20',k<Math.min(3,Q.streak)?'#F5B700':'#A2A2A2')).join('')}</span>
+       <span class="b14 mut">${Q.i+1} of ${QUIZ.length}</span></div>
+     <div class="qbody" data-body>
+       <p class="qtext">${esc(q.q)}</p>
+       <div class="opts ${q.type==='tf'?'tf':''}">${q.o.map((o,k)=>`<button class="opt ${optCls(k)}" data-o="${k}" ${a.sub?'disabled':''}>${esc(o)}</button>`).join('')}</div>
+       ${a.sub?`<div class="details"><div class="l12">Answer Details</div><p class="b14 mut" style="margin:8px 0 0">${esc(q.d)}</p></div>`:''}
+     </div>
+     ${a.sub?`<div class="verdict ${okNow?'ok':'bad'}">${ic(okNow?'r-check':'r-x','s20')}${okNow?'Great job!':'Keep practicing!'}</div>`:`<div class="qfoot b14">${a.sel===null?'Choose Answer':'Tap Submit to check'}</div>`}
+   </div>
+   <div class="qbar"><button class="btn white sq" data-hint aria-label="Hint">${ic('r-pencil-simple-line','s20')}</button>
+     ${!a.sub?`<button class="btn ${a.sel===null?'disabled':'white'}" data-submit>Submit</button>`:`<button class="btn white" data-next>${isLast?'Finish':'Next'}</button>`}</div>
+   ${homeInd(true)}`;
+  // keep the current pill in view
+  const pills=el.querySelector('[data-pills]'); requestAnimationFrame(()=>{ const cur=pills.querySelector('.cur'); if(cur) pills.scrollLeft=cur.offsetLeft-150; });
+  bind(el,'[data-act="back"]',()=>quitDialog('exercise', ()=>back()));
+  bind(el,'[data-act="right"]',()=>moreSheet());
+  bind(el,'[data-aa]',()=>{ S.textBig=!S.textBig; rerender(); });
+  bind(el,'[data-o]',(b)=>{ a.sel=+b.dataset.o; rerender(); });
+  bind(el,'[data-q]',(b)=>{ Q.i=+b.dataset.q; swapQ(); });
+  bind(el,'[data-submit]',()=>{ a.sub=true; Q.streak = a.sel===q.a ? Q.streak+1 : 0; rerender(); if(a.sel===q.a) burst(el); });
+  bind(el,'[data-next]',()=>{ if(isLast||Q.ans.every(x=>x.sub)){ go('result',{},'fade'); return; } const nx=Q.ans.findIndex((x,k)=>k>Q.i&&!x.sub); Q.i = nx>-1?nx:Q.ans.findIndex(x=>!x.sub); swapQ(); });
+  bind(el,'[data-hint]',()=>{ if(a.sub) return toast('Already answered'); const wrong=q.o.map((_,k)=>k).filter(k=>k!==q.a); const kill=wrong[0]; const btn=el.querySelector(`[data-o="${kill}"]`); btn.classList.add('dim'); btn.disabled=true; toast('One wrong answer removed'); });
+};
+function swapQ(){ rerender(); const b=stack[stack.length-1].el.querySelector('[data-body]'); b.animate([{opacity:0,transform:'translateX(24px)'},{opacity:1,transform:'none'}],{duration:300,easing:'cubic-bezier(.22,.8,.24,1)'}); }
+function burst(el){ const v=el.querySelector('.verdict'); if(!v) return; v.animate([{transform:'scale(.9)'},{transform:'scale(1.04)'},{transform:'scale(1)'}],{duration:380}); }
+
+R.result = (el) => {
+  const Q=S.quiz; const ok=Q.ans.filter((x,k)=>x.sub&&x.sel===QUIZ[k].a).length, bad=Q.ans.filter((x,k)=>x.sub&&x.sel!==QUIZ[k].a).length, un=QUIZ.length-ok-bad;
+  const pct=Math.round(ok/QUIZ.length*100); S.lastResult={ok};
+  const C=2*Math.PI*78;
+  el.innerHTML = `${statusBar()}${navBar({title:Q.title, left:'x', right:'dots-three', onPurple:true})}
+   <div class="qcard" style="margin-bottom:16px;padding:24px;overflow-y:auto">
+     <div class="donut"><svg width="200" height="200" viewBox="0 0 200 200"><circle cx="100" cy="100" r="78" fill="none" stroke="#F4F4F4" stroke-width="44"/><circle data-arc cx="100" cy="100" r="78" fill="none" stroke="#532EC9" stroke-width="44" stroke-dasharray="0 ${C}" style="transition:stroke-dasharray 1.1s cubic-bezier(.22,.8,.24,1)"/></svg>
+       <div class="lbl"><div style="width:116px;height:116px;border-radius:50%;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.08);display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="h28" data-pct>0%</div><div style="font-size:10px;line-height:12px" class="mut">Right Answers</div></div></div></div>
+     <div style="text-align:center;margin-top:20px"><div class="h28">${pct>=80?'Excellent!':pct>=50?'Keep It Up!':'Don’t give up!'}</div><div class="b14 mut" style="margin-top:4px">${pct>=80?'You nailed this exercise':'You can do better next time'}</div></div>
+     <div class="stats3" style="margin-top:20px"><div><span class="dotn" style="background:#82B536">${ok}</span><span class="b12 mut">Correct</span></div><div><span class="dotn" style="background:#F15B50">${bad}</span><span class="b12 mut">Incorrect</span></div><div><span class="dotn" style="background:#666">${un}</span><span class="b12 mut">Unsolved</span></div></div>
+     <div style="display:flex;justify-content:center;gap:28px;margin:20px 0">
+       <div style="display:flex;gap:10px;align-items:center"><svg width="26" height="30" viewBox="0 0 26 30" fill="none" stroke="#532EC9" stroke-width="2"><circle cx="13" cy="11" r="9"/><circle cx="13" cy="11" r="5"/><path d="M8 18l-2 10 7-4 7 4-2-10"/></svg><div><div class="b12 mut">Points</div><div class="l14">${ok*100}/${QUIZ.length*100}</div></div></div>
+       <div style="display:flex;gap:10px;align-items:center">${star(30)}<div><div class="b12 mut">Stars</div><div class="l14">${ok*10}/${QUIZ.length*10}</div></div></div></div>
+     <div style="display:flex;flex-direction:column;gap:16px"><button class="btn primary" data-review>Review Answers</button><button class="btn secondary" data-redo>Redo Exercise</button><button class="link" data-back style="margin-top:4px">Back to Exercises</button></div>
+   </div>${homeInd(true)}`;
+  setTimeout(()=>{ el.querySelector('[data-arc]').setAttribute('stroke-dasharray', `${C*ok/QUIZ.length} ${C}`); const n=el.querySelector('[data-pct]'); const t0=performance.now(); const f=t=>{const p=Math.min(1,(t-t0)/1100); n.textContent=Math.round(pct*(1-Math.pow(1-p,3)))+'%'; if(p<1) requestAnimationFrame(f);}; requestAnimationFrame(f); }, 200);
+  if(pct>=80) setTimeout(()=>confetti(),400);
+  const toEx=()=>{ // go back to the exercise list beneath
+    const idx=stack.map(s=>s.name).lastIndexOf('exercises'); if(idx>-1){ stack=stack.slice(0,idx+1); const top=stack[idx]; top.el=render('exercises'); el.replaceWith(top.el); top.el.classList.add('anim-fade-in'); } else { go('exercises',{},'fade'); } };
+  bind(el,'[data-act="back"],[data-back]',toEx);
+  bind(el,'[data-review]',()=>{ Q.i=0; go('quiz',{},'fade'); });
+  bind(el,'[data-redo]',()=>{ newQuiz(Q.title); go('quiz',{},'fade'); });
+};
+// result → keep exercises screen under it: patch go for fade replacing only top when a stack exists
+const _go=go; go=function(name, params, mode){ if(mode==='fade' && ['result','quiz'].includes(name) && stack.length>1){ closeOverlay(true); const el=render(name,params); el.classList.add('anim-fade-in'); const top=stack[stack.length-1]; $app.appendChild(el); setTimeout(()=>top.el.remove(),330); stack[stack.length-1]={name,params,el}; return; } return _go(name,params,mode); };
+
+/* tabs */
+/* ---------- Friends (newest flow) ---------- */
+const PEOPLE = {
+  alex:{n:'Alex Lamar', u:'alexlamar', s:'1 000', av:'av-tyler.png', g:'g-green', rank:'rank-purple.png'},
+  nick:{n:'Nick Mayer', u:'nickmayer', s:'999', av:'av-nick.png', g:'g-yellow', rank:'rank-purple.png'},
+  lisa:{n:'Lisa Brown', u:'lisabrown', s:'998', av:'av-lisa.png', g:'g-purple', rank:'rank-purple.png'},
+  mira:{n:'Mira Schleifer', u:'miras', s:'600', av:'av-mira.png', g:'g-green', rank:'rank-gold.png'},
+  madelyn:{n:'Madelyn Philips', u:'madelynp', s:'300', av:'av-lisa.png', g:'g-yellow', rank:'rank-silver.png'},
+  tatiana:{n:'Tatiana Saris', u:'tatiana.s', s:'100', av:'av-tatiana.png', g:'g-purple', rank:'rank-bronze.png'},
+  salma:{n:'Salma Al Harthy', u:'salma.h', s:'540', av:'av-madelyn.png', g:'g-yellow', rank:'rank-gold.png'},
+  omar:{n:'Noura Al Said', u:'noura.said', s:'410', av:'ob-av3.png', g:'g-green', rank:'rank-silver.png'},
+};
+const FR = { friends:['alex','nick','lisa','mira','madelyn','tatiana'], received:['mira','madelyn','salma'], sent:['mira','madelyn'], suggested:['mira','salma','omar'], pending:new Set() };
+const P = id => PEOPLE[id];
+const RKC = {1:['#FBC02D','#fff'],2:['#E4E4E4','#333'],3:['#F57C1F','#fff']};
+const scoreOf = id => +P(id).s.replace(/\s/g,'');
+const ranked = () => [...FR.friends].sort((a,b)=>scoreOf(b)-scoreOf(a));
+const fav = (id, size, {rk, more, big}={}) => { const p=P(id); return `<span class="fav ${big?'big':''}" style="width:${size}px;height:${size}px">${avatar(p.av,p.g,size)}${more?`<button class="more" data-more="${id}" aria-label="More for ${esc(p.n)}">${ic('r-dots-three','s16')}</button>`:''}${rk?`<span class="num" style="background:${RKC[rk][0]};color:${RKC[rk][1]}">${rk}</span><img class="hex" src="${A}rank-purple.png" alt="">`:''}</span>`; };
+const scoreRow = id => `<div class="sc">${star(16)}${P(id).s}</div>`;
+const mutual = () => `<span class="mstack">${['av-mira.png','av-lisa.png','av-tyler.png'].map(a=>`<span><img src="${A+a}" alt=""></span>`).join('')}<b>+3</b></span>`;
+const friendSheet = (id) => { const p=P(id); const bs=overlay(`<div class="bs-head"><div class="t16">${esc(p.n)}</div><button class="icbtn x" data-x>${ic('r-x')}</button></div><div style="padding:8px 16px 0">
+   <button class="row" data-a="profile" style="border-top:0">${ic('r-user-plus','s20','#532EC9')}<span class="grow l14">View profile</span>${ic('r-caret-right','s20','#666')}</button>
+   <button class="row" data-a="chat">${ic('r-chat-circle','s20','#532EC9')}<span class="grow l14">Send a message</span>${ic('r-caret-right','s20','#666')}</button>
+   <button class="row" data-a="remove">${ic('r-trash','s20','#E2483D')}<span class="grow l14" style="color:var(--red-600)">Remove friend</span></button></div>${homeInd()}`);
+  bind(bs,'[data-x]',()=>closeOverlay());
+  bind(bs,'[data-a]',(b)=>{ const a=b.dataset.a; closeOverlay(true); if(a==='profile') go('profile',{id}); if(a==='chat') go('chat',{n:p.n}); if(a==='remove'){ FR.friends=FR.friends.filter(x=>x!==id); rerender(); toast(`${p.n} removed from friends`); } }); };
+const wireFriendBits = (el) => {
+  bind(el,'[data-more]',b=>friendSheet(b.dataset.more));
+  bind(el,'[data-prof]',b=>go('profile',{id:b.dataset.prof}));
+  bind(el,'[data-acc]',(b)=>{ const id=b.dataset.acc, card=b.closest('.fi,.frow'); b.classList.add('done'); b.innerHTML=ic('r-check','s20');
+    setTimeout(()=>{ card.classList.add('gone'); setTimeout(()=>{ FR.received=FR.received.filter(x=>x!==id); if(!FR.friends.includes(id)) FR.friends.push(id); rerender(); toast(`${P(id).n} is now your friend`); }, 320); }, 260); });
+  bind(el,'[data-rej]',(b)=>{ const id=b.dataset.rej, card=b.closest('.fi,.frow'); card.classList.add('gone'); setTimeout(()=>{ FR.received=FR.received.filter(x=>x!==id); rerender(); }, 320); });
+  bind(el,'[data-cancel]',(b)=>{ const id=b.dataset.cancel, card=b.closest('.frow'); card.classList.add('gone'); setTimeout(()=>{ FR.sent=FR.sent.filter(x=>x!==id); rerender(); toast('Request cancelled'); }, 320); });
+  bind(el,'[data-add]',(b)=>{ const id=b.dataset.add; if(FR.pending.has(id)){ FR.pending.delete(id); b.classList.remove('sent'); b.innerHTML=ic('r-user-plus','s20'); return; } FR.pending.add(id); b.classList.add('sent'); b.innerHTML=ic('r-check','s20'); toast(`Request sent to ${P(id).n}`); });
+};
+const addBtn = (id, st='') => `<button class="addb ${FR.pending.has(id)?'sent':''}" style="${st}" data-add="${id}" aria-label="Add ${esc(P(id).n)}">${ic(FR.pending.has(id)?'r-check':'r-user-plus','s20')}</button>`;
+const empty = t => `<div class="b14 mut" style="padding:0 16px">${t}</div>`;
+
+R.friends = (el) => {
+  const top=ranked();
+  el.innerHTML = `${statusBar()}<div class="sheet">${navBar({title:'Friends'})}
+   <div class="scroll" style="padding-bottom:16px">
+     <div class="fsec" style="padding-top:20px"><span class="t16">My Friends</span><button class="link" data-go="myfriends">See All</button></div>
+     <div class="car">${top.map((id,k)=>`<div class="fi" style="animation:upIn .45s cubic-bezier(.22,.8,.24,1) ${k*.05}s both">${fav(id,80,{rk:k<3?k+1:0,more:true})}<button class="nm" data-prof="${id}">${esc(P(id).n)}</button>${scoreRow(id)}</div>`).join('')}</div>
+     <div class="fsec"><span class="t16">Friend Requests</span><button class="link" data-go="requests">See All</button></div>
+     ${FR.received.length?`<div class="car">${FR.received.map(id=>`<div class="fi wide"><button data-prof="${id}">${fav(id,80)}</button><div class="nm">${esc(P(id).n)}</div>${scoreRow(id)}<div class="yn"><button class="acc" data-acc="${id}" aria-label="Accept">${ic('r-check','s20')}</button><button class="rej" data-rej="${id}" aria-label="Decline">${ic('r-x','s20')}</button></div></div>`).join('')}</div>`:empty('No new requests. You’re all caught up.')}
+     <div class="fsec"><span class="t16">Suggested Friends</span></div>
+     ${FR.suggested.slice(0,2).map(id=>`<div class="frow" style="padding-top:0"><button data-prof="${id}">${fav(id,56)}</button><div class="grow"><div class="l14">${esc(P(id).n)}</div>${scoreRow(id)}</div><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:10px;line-height:12px;font-weight:500">Mutual Friends</span>${mutual()}</div>${addBtn(id,'width:40px;height:40px;margin:0 0 0 8px')}</div>`).join('')}
+   </div>
+   <div style="padding:12px 16px 0"><button class="btn primary" data-go="addfriend">Add Friend</button></div>${homeInd()}</div>`;
+  wireBack(el); wireFriendBits(el);
+  bind(el,'[data-go]',b=>go(b.dataset.go));
+};
+
+R.myfriends = (el) => {
+  const top=ranked(), [a,b,c]=top, rest=top.slice(3);
+  const pod=(id,rk,size)=>id?`<div class="fi">${fav(id,size,{rk,more:true,big:size>100})}<button class="nm" data-prof="${id}">${esc(P(id).n)}</button>${scoreRow(id)}</div>`:'';
+  el.innerHTML = `${statusBar()}<div class="sheet">${navBar({title:'My Friends'})}
+   <div class="scroll">
+     <div class="podium">${pod(b,2,80)}<div style="margin-bottom:0">${pod(a,1,120)}</div>${pod(c,3,80)}</div>
+     ${rest.map((id,k)=>`<div class="frow" style="animation:upIn .4s cubic-bezier(.22,.8,.24,1) ${.1+k*.05}s both"><button data-prof="${id}">${fav(id,56)}</button><div class="grow"><div class="l14">${esc(P(id).n)}</div>${scoreRow(id)}</div><img src="${A+P(id).rank}" width="32" height="36" alt="" style="object-fit:contain;margin-right:12px"><button class="icbtn" data-more="${id}" aria-label="More">${ic('r-dots-three','s20','#666')}</button></div>`).join('')}
+   </div>${homeInd()}</div>`;
+  wireBack(el); wireFriendBits(el);
+};
+
+R.requests = (el) => {
+  const row=(id,kind)=>`<div class="frow"><button data-prof="${id}">${fav(id,56)}</button><div class="grow"><div class="l14" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(P(id).n)}</div>${scoreRow(id)}</div><img src="${A+P(id).rank}" width="32" height="36" alt="" style="object-fit:contain;margin-right:8px">
+    ${kind==='in'?`<button class="acc" data-acc="${id}" aria-label="Accept">${ic('r-check','s20')}</button><button class="rej" data-rej="${id}" aria-label="Decline">${ic('r-x','s20')}</button>`:`<button class="rej" data-cancel="${id}" aria-label="Cancel request">${ic('r-x','s20')}</button>`}</div>`;
+  el.innerHTML = `${statusBar()}<div class="sheet">${navBar({title:'Friend Requests'})}
+   <div class="scroll">
+     <div class="l14 mut" style="padding:20px 16px 4px">Received</div>${FR.received.map(id=>row(id,'in')).join('')||empty('No requests waiting.')}
+     <div class="l14 mut" style="padding:20px 16px 4px">Sent</div>${FR.sent.map(id=>row(id,'out')).join('')||empty('No pending requests.')}
+   </div>${homeInd()}</div>`;
+  wireBack(el); wireFriendBits(el);
+};
+
+R.addfriend = (el) => {
+  el.innerHTML = `${statusBar()}<div class="sheet">${navBar({title:'Add Friend'})}
+   <div class="scroll">
+     <div class="t16" style="padding:20px 16px 16px">Find your Friends</div>
+     <div style="display:flex;flex-direction:column;gap:12px;padding:0 16px">
+       <button class="findc" data-contacts><img src="${A}ic-contacts.png" alt="">Select From Contacts</button>
+       <button class="findc" data-go="search"><img src="${A}ic-search3d.png" alt="">Search by Username</button>
+       <button class="findc" data-share>${avatar('av-tyler.png','g-green',36)}Sharing my Profile</button>
+     </div>
+     <div class="fsec" style="padding-top:28px"><span class="t16">Suggested Friends</span><button class="link" data-all>See All</button></div>
+     <div class="car">${FR.suggested.map(id=>`<div class="sgc"><button data-prof="${id}">${fav(id,56)}</button><div class="nm" style="margin-top:8px;font-size:14px;line-height:20px;font-weight:500;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(P(id).n)}</div>${scoreRow(id)}<div class="l10">Mutual Friends</div>${mutual()}${addBtn(id)}</div>`).join('')}</div>
+   </div>${homeInd()}</div>`;
+  wireBack(el); wireFriendBits(el);
+  bind(el,'[data-go]',b=>go(b.dataset.go));
+  bind(el,'[data-contacts]',()=>toast('Muthabr would like to access your contacts','info'));
+  bind(el,'[data-share]',()=>toast('Profile link copied: muthabr.app/@tyler'));
+  bind(el,'[data-all]',()=>go('search'));
+};
+
+R.search = (el) => {
+  el.innerHTML = `${statusBar()}<div class="sheet"><div class="nav" style="border-bottom:1px solid var(--outline);gap:8px"><button class="icbtn" data-act="back" aria-label="Back">${ic('r-arrow-left')}</button>
+     <label class="srch">${ic('r-magnifying-glass','s20','#666')}<input id="fr-q" placeholder="Search for user..." autocomplete="off"><button class="icbtn" style="width:28px;height:28px" data-clear aria-label="Clear">${ic('r-x','s20')}</button></label></div>
+   <div class="scroll" data-res></div>${homeInd()}</div>`;
+  wireBack(el);
+  const q=el.querySelector('#fr-q'), res=el.querySelector('[data-res]');
+  const draw=()=>{ const v=q.value.trim().toLowerCase().replace(/^@/,'');
+    if(!v){ res.innerHTML=`<div class="b14 mut" style="padding:24px 16px;text-align:center">Type a name or @username to find classmates.</div>`; return; }
+    const hits=Object.keys(PEOPLE).filter(id=>P(id).n.toLowerCase().includes(v)||P(id).u.includes(v));
+    res.innerHTML = hits.map(id=>`<button class="frow" style="width:100%;text-align:left" data-prof="${id}">${fav(id,48)}<div class="grow"><div class="l14">${esc(P(id).n)}</div><div class="b12 mut">@${P(id).u}</div></div>${FR.friends.includes(id)?'<span class="b12" style="color:var(--green-600)">Friend</span>':ic('r-caret-right','s20','#666')}</button>`).join('') || `<div class="b14 mut" style="padding:24px 16px;text-align:center">No one called “${esc(q.value)}” yet. Check the spelling, or share your profile so they can find you.</div>`;
+    bind(res,'[data-prof]',b=>go('profile',{id:b.dataset.prof})); };
+  q.addEventListener('input',draw); bind(el,'[data-clear]',()=>{ q.value=''; draw(); q.focus(); });
+  draw(); setTimeout(()=>{ if(el.isConnected) q.focus({preventScroll:true}); },450);
+};
+
+R.profile = (el, p) => {
+  const id=p.id||'alex', u=P(id), isF=FR.friends.includes(id), sent=FR.pending.has(id)||FR.sent.includes(id);
+  el.innerHTML = `${statusBar()}<div class="sheet">${navBar({title:'User Profile'})}
+   <div class="scroll" style="padding-bottom:24px">
+     <div style="display:flex;flex-direction:column;align-items:center;padding-top:24px">
+       <span style="animation:popIn .45s cubic-bezier(.22,.8,.24,1.3) both">${avatar(u.av,u.g,120)}</span>
+       <div style="margin-top:16px;display:flex;gap:6px;align-items:baseline"><span class="t20">${esc(u.n)}</span><span class="l14" style="color:var(--primary)">@${u.u}</span></div>
+       <div class="b12 mut" style="margin-top:4px">Account created in 2020</div>
+       <div class="sc" style="margin-top:6px">${star(16)}${u.s}</div>
+     </div>
+     <div class="pstats"><div><span class="t16">Grade</span><span class="b14 mut">10th</span></div><div><span class="t16">Friends</span><span class="b14 mut">12</span></div><div><span class="t16">Mutual Friends</span><span class="b14 mut" style="display:flex;gap:6px;align-items:center">6 ${mutual()}</span></div></div>
+     <div style="display:flex;justify-content:center;margin-top:24px"><button class="btn ${isF?'secondary':sent?'secondary':'primary'}" style="width:178px" data-frb>${isF?`${ic('r-chat-circle','s20')}Message`:sent?`${ic('r-check','s20')}Request sent`:`${ic('r-user-plus','s20')}Add Friend`}</button></div>
+     <div class="ovw"><div class="l14" style="text-align:center">Account Overview</div><div class="tiles">
+       <div>${star(28)}<span style="font-size:10px;line-height:12px;color:var(--on2);margin-top:4px">Score</span><span class="l12">3 200</span></div>
+       <div><img src="${A}rank-purple.png" width="26" height="30" alt=""><span style="font-size:10px;line-height:12px;color:var(--on2);margin-top:2px">Rank</span><span class="l12">Excellent</span></div>
+       <div>${ic('f-fire','s32','#F15B50')}<span style="font-size:10px;line-height:12px;color:var(--on2)">Streak</span><span class="l12">100 days</span></div></div></div>
+   </div>${homeInd()}</div>`;
+  wireBack(el);
+  bind(el,'[data-frb]',()=>{ if(isF) return go('chat',{n:u.n}); if(sent){ FR.pending.delete(id); FR.sent=FR.sent.filter(x=>x!==id); } else { FR.pending.add(id); toast(`Request sent to ${u.n}`); } rerender(); });
+};
+
+R.chat = (el, p) => {
+  const f=Object.values(PEOPLE).find(x=>x.n===p.n)||PEOPLE.alex;
+  el.innerHTML = `${statusBar()}<div class="sheet"><div class="nav" style="border-bottom:1px solid var(--outline)"><button class="icbtn" data-act="back" aria-label="Back">${ic('r-arrow-left')}</button><div style="display:flex;gap:12px;align-items:center;flex:1;margin-left:4px">${avatar(f.av,f.g,40)}<div><div class="l14">${f.n}</div><div class="b12" style="color:var(--green-600)">Online</div></div></div></div>
+   <div class="scroll" data-msgs style="padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--surf-low)">
+     <div class="b12 mut" style="text-align:center;margin:4px 0 8px">Today</div>
+     <div style="align-self:flex-start;max-width:75%;background:#fff;border:1px solid var(--outline);border-radius:14px 14px 14px 4px;padding:10px 12px" class="b14">Did you finish the Adding more Numbers exercise? 🙌</div>
+     <div style="align-self:flex-start;max-width:75%;background:#fff;border:1px solid var(--outline);border-radius:14px 14px 14px 4px;padding:10px 12px" class="b14">I got 4 out of 5!</div>
+   </div>
+   <form data-f style="display:flex;gap:8px;padding:12px 16px 0;align-items:center"><div class="search" style="flex:1"><input id="chat-in" placeholder="Write a message…" aria-label="Message"></div><button class="btn primary sq" style="height:40px;width:40px;box-shadow:0 3px 0 var(--primary-800)">${ic('r-caret-right','s20')}</button></form>${homeInd()}</div>`;
+  wireBack(el);
+  const box=el.querySelector('[data-msgs]'), inp=el.querySelector('#chat-in');
+  el.querySelector('[data-f]').addEventListener('submit',e=>{ e.preventDefault(); const v=inp.value.trim(); if(!v) return; const m=document.createElement('div'); m.className='b14'; m.style.cssText='align-self:flex-end;max-width:75%;background:var(--primary);color:#fff;border-radius:14px 14px 4px 14px;padding:10px 12px;animation:upIn .25s ease both'; m.textContent=v; box.appendChild(m); inp.value=''; box.scrollTop=1e5;
+    setTimeout(()=>{ if(!box.isConnected) return; const r=document.createElement('div'); r.className='b14'; r.style.cssText='align-self:flex-start;max-width:75%;background:#fff;border:1px solid var(--outline);border-radius:14px 14px 14px 4px;padding:10px 12px;animation:upIn .25s ease both'; r.textContent='Nice! Let’s do the unit exam together tomorrow 💪'; box.appendChild(r); box.scrollTop=1e5; }, 1100); });
+};
+
+R.bookmarks = (el) => {
+  const groups=[{n:'Bookmark Group #1', t:[['sum','Summary',2],['fr','Fast Review',10],['ex','Exercises',8],['exam','Exams',4]]},{n:'Bookmark Group #2', t:[['sum','Summary',2],['exam','Exams',4]]},{n:'Bookmark Group #3', t:[['fr','Fast Review',2],['ex','Exercises',5]]}];
+  const paths=[{n:'Before the midterm', t:[['sum','Summary',3],['fr','Fast Review',4],['ex','Exercises',2]]},{n:'Weekend revision', t:[['fr','Fast Review',6],['exam','Exams',1]]}];
+  const data = S.bmSeg==='bm'?groups:paths;
+  el.innerHTML = `${statusBar()}${navBar({title:'Bookmarks', left:null, right:'list-bullets', onPurple:true})}
+   <div class="sheet"><div style="padding:16px 16px 0;display:flex;gap:12px;flex:none"><div class="search" style="flex:1"><span style="color:var(--on2)">${ic('r-magnifying-glass','s20')}</span><input id="bm-search" placeholder="Search for content" aria-label="Search bookmarks"></div><button class="icbtn bordered" aria-label="Filter" data-filter>${ic('r-funnel','s20')}</button></div>
+   <div style="padding:12px 16px 0;flex:none"><div class="seg" data-segc style="display:flex"><span class="pill"></span><button style="flex:1;justify-content:center" data-bs="bm" class="${S.bmSeg==='bm'?'on':''}">Bookmarks <span class="badge">${groups.length}</span></button><button style="flex:1;justify-content:center" data-bs="sp" class="${S.bmSeg==='sp'?'on':''}">Study Path <span class="badge">${paths.length}</span></button></div></div>
+   <div class="scroll" style="padding:16px;display:flex;flex-direction:column;gap:12px" data-list>
+     ${data.map((g,k)=>`<div class="bgroup" style="animation:upIn .35s ${k*.06}s cubic-bezier(.22,.8,.24,1) both"><div style="display:flex;justify-content:space-between;align-items:center"><span class="l14">${g.n}</span><button class="icbtn" data-more="${k}" style="width:28px;height:28px;color:var(--on2)" aria-label="More">${ic('r-dots-three','s20')}</button></div><div class="tags">${g.t.map(([c,l,n])=>`<button class="tag ${c}" data-tag="${c}">${l} <span class="badge">${n}</span></button>`).join('')}</div></div>`).join('')}
+   </div></div>${tabBar(true)}`;
+  wireTabs(el);
+  const segc=el.querySelector('[data-segc]'); requestAnimationFrame(()=>{ const on=segc.querySelector('button.on'); const pill=segc.querySelector('.pill'); pill.style.left=on.offsetLeft+'px'; pill.style.width=on.offsetWidth+'px'; });
+  bind(el,'[data-bs]',(b)=>{ S.bmSeg=b.dataset.bs; rerender(); });
+  bind(el,'[data-more]',(b)=>{ el.querySelectorAll('.menu').forEach(m=>m.remove()); const m=document.createElement('div'); m.className='menu'; m.innerHTML=`<button data-del>${ic('r-trash','s20')}<span class="b14">Delete</span></button>`; b.closest('.bgroup').appendChild(m); m.querySelector('[data-del]').addEventListener('click',ev=>{ ev.stopPropagation(); const g=b.closest('.bgroup'); g.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateX(-30px)'}],{duration:240}).onfinish=()=>{ g.remove(); toast('Group deleted'); }; }); });
+  el.addEventListener('click',()=>el.querySelectorAll('.menu').forEach(m=>m.remove()));
+  bind(el,'[data-tag]',(b)=>{ const c=b.dataset.tag; useBook(BOOKS[0]); S.topic=TOPICS[2].t; if(c==='sum') go('summary'); else if(c==='fr') go('fastreview'); else go('exercises'); });
+  bind(el,'[data-filter]',()=>toast('Filters: all content types'));
+  el.querySelector('#bm-search').addEventListener('input',e=>{ const q=e.target.value.toLowerCase(); el.querySelectorAll('.bgroup').forEach(g=>g.hidden=!g.textContent.toLowerCase().includes(q)); });
+};
+
+R.settings = (el) => {
+  el.innerHTML = `${statusBar()}${navBar({title:'Settings', left:null, right:'info', onPurple:true})}
+   <div class="scroll" style="padding:0 16px">
+     <div class="l14" style="color:#fff;display:flex;gap:8px;align-items:center;padding:4px 0 12px">For Tyler’s profile ${avatar('av-tyler.png','g-green',24)}</div>
+     <div class="group" style="border:0">${['Edit Profile','Syllabus'].map(l=>`<button class="row" data-row>${`<span class="grow b14">${l}</span>`}${ic('r-caret-right','s20','#666')}</button>`).join('')}</div>
+     <div class="l14" style="color:#fff;padding:24px 0 12px">Account Settings</div>
+     <div class="group" style="border:0;margin-bottom:16px">
+       ${[['User Name','Tyler Wilson'],['Phone','+968 3445-3432'],['Email','tyler.wilson@school.om'],['Password','<span class="link">Change Password</span>']].map(([l,v])=>`<button class="row" data-row><span class="b14">${l}</span><span class="grow b14 mut" style="text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v}</span>${ic('r-caret-right','s20','#666')}</button>`).join('')}
+       <button class="row" data-row><span class="grow b14">Users</span><span class="minis" style="padding-left:6px">${['av-mira.png','av-lisa.png'].map(a=>`<span class="avatar g-green" style="width:24px;height:24px;margin-left:-6px"><img src="${A+a}" alt=""></span>`).join('')}</span>${ic('r-caret-right','s20','#666')}</button>
+       <button class="row" data-row><span class="b14" style="color:var(--red-500)">Delete Account</span></button>
+       <button class="row" data-signout><span class="b14" style="color:var(--red-500)">Sign Out</span></button>
+     </div>
+   </div>${tabBar()}`;
+  wireTabs(el);
+  bind(el,'[data-row]',()=>toast('Available in the full app'));
+  bind(el,'[data-signout]',()=>{ const bs=overlay(`<div class="bs-head"><div class="t16">Sign Out</div><button class="icbtn x" data-x>${ic('r-x')}</button></div><div class="b14" style="padding:20px 24px">Sign out of Tyler’s account on this device?</div><div style="display:flex;gap:12px;padding:0 24px 28px"><button class="btn secondary" data-x2>Cancel</button><button class="btn primary" data-yes>Sign Out</button></div>`,{center:true}); bind(bs,'[data-x],[data-x2]',()=>closeOverlay()); bind(bs,'[data-yes]',()=>{ closeOverlay(true); go('signin',{},'fade'); }); });
+};
+
+/* ---------------- jump menu ---------------- */
+function jump(where){
+  closeOverlay(true);
+  const reset=(arr)=>{ $app.innerHTML=''; stack=arr.map(([n,p])=>({name:n,params:p||{},el:null})); const top=stack[stack.length-1]; top.el=render(top.name,top.params); top.el.classList.add('anim-fade-in'); $app.appendChild(top.el); };
+  S.ddOpen=false;
+  switch(where){
+    case 'splash': reset([['splash']]); break;
+    case 'onboarding': reset([['onboarding']]); break;
+    case 'signup': reset([['signup']]); break;
+    case 'code': S.phone=S.phone||'9123-4567'; reset([['signup'],['phone'],['code',{phone:S.phone}]]); break;
+    case 'signin': reset([['signin']]); break;
+    case 'home': S.tab='syllabus'; reset([['home']]); break;
+    case 'topics': S.tab='syllabus'; useBook(BOOKS[0]); S.unit='Numbers'; S.topicOpen=2; reset([['home'],['units'],['topics']]); break;
+    case 'flash': useBook(BOOKS[0]); S.topic='Adding more Numbers'; S.flash={i:0,known:0,title:LESSONS[0]}; reset([['home'],['units'],['topics'],['fastreview'],['flash']]); break;
+    case 'quiz': useBook(BOOKS[0]); S.topic='Adding more Numbers'; newQuiz(LESSONS[0]); reset([['home'],['units'],['topics'],['exercises'],['quiz']]); break;
+    case 'friends': S.tab='syllabus'; reset([['home'],['friends']]); break;
+    case 'profile': S.tab='syllabus'; reset([['home'],['friends'],['profile',{id:'alex'}]]); break;
+    case 'bookmarks': S.tab='bookmarks'; reset([['bookmarks']]); break;
+  }
+}
+document.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>jump(b.dataset.jump)));
+window.__muthabr = {jump, go, back, S};
+// allow #hash deep links for sharing a flow
+const start = (location.hash||'').slice(1);
+jump(['onboarding','signup','code','profile','signin','home','topics','flash','quiz','friends','bookmarks'].includes(start)?start:'splash');
+
+/* ---------------- scale device to fit ---------------- */
+const dev=document.getElementById('device');
+function fit(){ if(innerWidth<=480){dev.style.transform='';return;} const s=Math.min(1,(innerHeight-48)/836); dev.style.transform=`scale(${s})`; dev.style.margin=`${(812*s-812)/2}px ${(375*s-375)/2}px`; }
+addEventListener('resize',fit); fit();
+})();
+</script>
