@@ -1,0 +1,21 @@
+<!-- Lazy video: load the walkthrough video and poster only when it nears the viewport. -->
+<script>
+(function () {
+  if (window.__csLazyVideo) return; window.__csLazyVideo = true;
+  var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { io.unobserve(e.target); go(e.target); } });
+  }, { rootMargin: '600px 0px' }) : null;
+  function go(v) {
+    if (v.dataset.lazyPoster) v.poster = v.dataset.lazyPoster;
+    v.src = v.dataset.lazySrc; v.removeAttribute('data-lazy-src');
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+  }
+  function scan() {
+    document.querySelectorAll('video[data-lazy-src]:not([data-lz])').forEach(function (v) {
+      v.setAttribute('data-lz', ''); if (io) io.observe(v); else go(v);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scan); else scan();
+  window.addEventListener('load', scan); setTimeout(scan, 2000);
+})();
+</script>
