@@ -27,7 +27,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--purple-400);outline-offset:2px}
 
 /* ---------- stage ---------- */
-.stage{height:100%;display:flex;align-items:center;justify-content:center;gap:56px}
+.stage{height:100%;display:flex;align-items:center;justify-content:center}
 .side{width:260px;display:flex;flex-direction:column;gap:20px}
 .side h1{font-size:28px;font-weight:600;line-height:34px;margin:0;letter-spacing:-.01em;text-wrap:balance}
 .side p{margin:0;color:var(--stage-ink2);font-size:14px;line-height:21px}
@@ -558,23 +558,6 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 </style>
 
 <div class="stage">
-  <aside class="side" aria-label="Prototype guide">
-    <div class="eyebrow">Muthabr · iOS · 375 × 812</div>
-    <h1>Muthabr interactive prototype</h1>
-    <p>Built from the Muthabr Figma file with the app's own tokens, Rubik type and assets. Every tap, swipe and answer works.</p>
-    <nav class="flows" aria-label="Jump to a flow">
-      <button data-jump="splash"><span>Splash and onboarding</span><span>4 slides</span></button>
-      <button data-jump="signup"><span>Create account</span><span>OTP · setup</span></button>
-      <button data-jump="signin"><span>Sign in</span><span>validation</span></button>
-      <button data-jump="home"><span>Syllabus home</span><span>grid · rows</span></button>
-      <button data-jump="topics"><span>Study path</span><span>unit → topic</span></button>
-      <button data-jump="flash"><span>Fast review</span><span>flashcards</span></button>
-      <button data-jump="quiz"><span>Exercise</span><span>5 questions</span></button>
-      <button data-jump="friends"><span>Friends</span><span>requests · profile</span></button>
-      <button data-jump="bookmarks"><span>Bookmarks</span><span>groups</span></button>
-    </nav>
-    <p class="hint">Tip: drag flashcards left or right, tap a card to flip it, and press <b>Aa</b> in an exercise to enlarge the text.</p>
-  </aside>
   <div class="device" id="device">
     <div class="bezel"></div>
     <div class="screen-wrap"><div class="app" id="app"></div></div>
